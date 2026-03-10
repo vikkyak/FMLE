@@ -37,6 +37,27 @@ Y_train <- demo$Y_train
 Y_test  <- demo$Y_test
 Z_train <- demo$Z_train
 Z_test  <- demo$Z_test
+q <- 0.995
+
+cap_and_scale_fit_local <- function(y, q = 0.995, eps = 1e-8) {
+  cap <- as.numeric(stats::quantile(y, probs = q, na.rm = TRUE))
+  y_cap <- pmin(y, cap)
+  y_log <- log1p(y_cap + eps)
+  mu <- mean(y_log, na.rm = TRUE)
+  sd <- stats::sd(y_log, na.rm = TRUE)
+  if (is.na(sd) || sd == 0) sd <- 1
+  list(cap = cap, mu = mu, sd = sd, eps = eps)
+}
+
+cap_and_scale_apply_local <- function(y, tf) {
+  y_cap <- pmin(y, tf$cap)
+  y_log <- log1p(y_cap + tf$eps)
+  (y_log - tf$mu) / tf$sd
+}
+
+tf_y <- cap_and_scale_fit_local(Y_train[, 1], q = q)
+y_train <- cap_and_scale_apply_local(Y_train[, 1], tf_y)
+y_test  <- cap_and_scale_apply_local(Y_test[, 1], tf_y)
 
 cv <- fmle_cv_parallel(
   X = X_train,
@@ -55,7 +76,7 @@ best <- cv$best
 
 fit <- fmle_train(
   X = X_train,
-  y = Y_train[, 1],
+  y = y_train,
   Z = Z_train,
   R = best$R,
   m = best$m,
@@ -72,37 +93,16 @@ pred <- fmle_predict(
   return_se = TRUE
 )
 
-cor(pred$mean, Y_test[, 1])
-mean((pred$mean - Y_test[, 1])^2)
+pearson <- cor(pred$mean, y_test, method = "pearson")
+spearman <- cor(pred$mean, y_test, method = "spearman")
+mse <- mean((pred$mean - y_test)^2)
 
-```
-
-## Multi-task example
-
-```r
-fit_mt <- fmle_train_mt(
-  X = X_train,
-  Y = Y_train,
-  Z = Z_train,
-  R = 2,
-  m = 1.8,
-  lambda_l1 = 1e-3,
-  ridge = 1e-6,
-  standardize = TRUE,
-  seed = 1
+data.frame(
+  metric = c("Pearson", "Spearman", "MSE"),
+  value = c(pearson, spearman, mse)
 )
 
-pred_mt <- fmle_predict_mt(
-  model = fit_mt,
-  X_new = X_test,
-  Z_new = Z_test,
-  return_se = TRUE
-)
-
-dim(pred_mt$mean)
-colMeans((pred_mt$mean - Y_test)^2)
 ```
-
 ## Important preprocessing note
 
 For **single-task FMLE**, `fmle_cv_parallel()` internally applies cap/log/scale preprocessing to the response before fold-wise fitting and evaluation. In contrast, `fmle_train()` fits the response exactly as supplied.
