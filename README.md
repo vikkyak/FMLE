@@ -103,6 +103,17 @@ data.frame(
 )
 
 ```
+## Vignette
+
+- [Rendered quickstart vignette](doc/quickstart.html)
+- [Vignette source](vignettes/quickstart.Rmd)
+
+You can also browse installed package vignettes in R with:
+
+```r
+browseVignettes("FMLE")
+```
+
 ## Important preprocessing note
 
 For **single-task FMLE**, `fmle_cv_parallel()` internally applies cap/log/scale preprocessing to the response before fold-wise fitting and evaluation. In contrast, `fmle_train()` fits the response exactly as supplied.
