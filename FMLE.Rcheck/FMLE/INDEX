@@ -1,0 +1,8 @@
+cap_and_scale_fit       Cap and log-scale a response vector
+fcm_fit                 Fuzzy c-means clustering for gating
+fmle_cv_mt_parallel     Multi-task cross-validation for FMLE
+fmle_cv_parallel        Cross-validation for single-task FMLE
+fmle_predict            Predict from an FMLE model on single task
+fmle_predict_mt         Predict from a multi-task FMLE model
+fmle_train              Train FMLE model for a single task
+fmle_train_mt           Train FMLE model for a multi-task

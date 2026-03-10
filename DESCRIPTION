@@ -1,0 +1,39 @@
+Package: FMLE
+Type: Package
+Title: Fuzzy Mixture of Linear Experts for Single-Cell Protein Abundance Prediction
+Version: 0.1.0
+Authors@R: 
+    person("Vikas", "Singh",
+           email = "vikkysingh07@gmail.com",
+           role = c("aut", "cre"))
+Description: Implements Fuzzy Mixture of Linear Experts (FMLE) for learning
+    mappings from single-cell RNA expression to surface protein abundance,
+    as measured for example in CITE-seq experiments. FMLE combines a fuzzy
+    c-means gating network in a low-dimensional representation (e.g. PCA,
+    embeddings or other latent spaces) with multiple linear experts operating
+    on high-dimensional gene expression features. The model supports both
+    single-protein (single-task) and multi-protein (multi-task) prediction,
+    optional L1 penalization of expert coefficients (lasso plus post-ridge),
+    and returns predictive means together with decomposed uncertainty
+    (aleatoric and parameter). Although implemented in a general form for
+    high-dimensional regression, the primary focus is accurate and interpretable
+    prediction of protein abundance at single-cell resolution across donors,
+    batches and antibody panels.
+License: GPL-3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: 
+    R (>= 4.1.0)
+Imports: 
+    stats,
+    glmnet,
+    future.apply
+Suggests: 
+    tibble,
+    ggplot2,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Config/testthat/edition: 3
