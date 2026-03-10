@@ -10,6 +10,16 @@ The package supports:
 - fuzzy c-means gating (`fcm_fit()`)
 - predictive uncertainty decomposition from the fitted experts
 
+## Overview
+
+FMLE models protein abundance as a mixture of regime-specific RNA–protein mappings with soft, input-dependent gating. This allows the model to capture heterogeneous coupling structure that is missed by a single global mapping.
+
+<p align="center">
+  <img src="figures/fmle_overview.jpg" alt="FMLE overview" width="1100">
+</p>
+
+*Figure 1. FMLE identifies regime-dependent RNA–protein coupling, improves over a single global mapping, and reveals interpretable regime structure across cells.*
+
 ## Installation
 
 ```r
@@ -103,6 +113,22 @@ data.frame(
 )
 
 ```
+## Benchmark summary
+
+Across multiple PBMC datasets, FMLE improves RNA→protein prediction relative to scLinear and cTPnet.
+
+<p align="center"> <img src="figures/fmle_benchmark.png" alt="FMLE benchmark results" width="1100"> </p>
+
+Figure 2. FMLE achieves stronger per-protein predictive performance across benchmark datasets and wins more frequently than competing methods.
+
+## Cross-donor generalization
+
+FMLE preserves regime structure and predictive advantage under donor shift, supporting the biological reproducibility of the inferred coupling regimes.
+
+<p align="center"> <img src="figures/fmle_cross_donor.jpg" alt="FMLE cross-donor results" width="1100"> </p>
+
+Figure 3. FMLE regimes generalize across donors, preserve structured RNA–protein coupling, and improve held-out donor prediction relative to global and baseline models.
+
 ## Vignette
 
 - [Rendered quickstart vignette](doc/quickstart.html)
