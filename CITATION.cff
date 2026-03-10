@@ -1,0 +1,18 @@
+```yaml
+cff-version: 1.2.0
+title: "FMLE"
+message: "If you use FMLE, please cite this software."
+type: software
+authors:
+  - family-names: "Singh"
+    given-names: "Vikas"
+    email: "vikkysingh07@gmail.com"
+license: "GPL-3.0"
+version: "0.1.0"
+date-released: "2026-03-10"
+abstract: >
+  FMLE is an R package for fuzzy mixture of linear experts modeling of
+  protein abundance from single-cell transcriptomic features, with support
+  for single-task and multi-task prediction, cross-validation, and
+  uncertainty-aware outputs.
+repository-code: "https://github.com/vikkyak/FMLE"
