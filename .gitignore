@@ -1,3 +1,6 @@
 .Rproj.user
 /doc/
 /Meta/
+FMLE.Rcheck/
+.Rhistory
+*.tar.gz
