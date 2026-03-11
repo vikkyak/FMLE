@@ -8,21 +8,29 @@ suppressPackageStartupMessages({
   library(grid)
 })
 
-bench <- 1  # set 1 or 2 or 3
-ds      <- "citeseq_v1"
-base <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_%d", bench))
+bench <- 1  # set 1, 2, or 3
+ds <- "citeseq_v1"
+
+base <- file.path(cfg$out_root, sprintf("benchmarks_%d", bench))
 out_dir <- file.path(base, "FMLE", paste0(ds, "_final"))
-dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-ctp    <- file.path(base, "ctp") 
-scl    <- file.path(base, "sclinear") 
+ctp <- file.path(base, "ctp")
+scl <- file.path(base, "sclinear")
 fig_dir <- file.path(base, "paper_figures", ds)
+
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
+
 fig2_out <- file.path(fig_dir, "fig3_examples_same.rds")
+stopifnot(file.exists(fig2_out))
 fig2 <- readRDS(fig2_out)
+
 available <- names(fig2$truth)
 print(available)
+stopifnot(file.exists(file.path(base, ds, "seu_final.rds")))
 seu_prep <- readRDS(file.path(base, ds, "seu_final.rds"))
 stopifnot("cell_type" %in% colnames(seu_prep@meta.data))
+
+
 celltype_vec <- setNames(as.character(seu_prep@meta.data$cell_type), colnames(seu_prep))
 
 fmle_ds_by_bench <- c(
@@ -39,7 +47,7 @@ bench_name <- c(
 )
 read_one_bench <- function(bench, fmle_ds){
   
-  base <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_%d", bench))
+  base <- file.path(out_root, sprintf("benchmarks_%d", bench))
   
   fmle_path <- file.path(base, "FMLE", fmle_ds, "fmle_test_metrics.csv")
   scl_path  <- file.path(base, "sclinear", "scLinear_test_metrics_fmle_fair.csv")

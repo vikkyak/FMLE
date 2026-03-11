@@ -33,7 +33,23 @@ remotes::install_github("vikkyak/FMLE")
 
 ## Quickstart
 
-The package ships with a tiny demo object for examples and the vignette.
+## Dataset used in the demo
+
+The packaged demo object is derived from the **PBMC 10k CITE-seq dataset** (10x Genomics, v3 chemistry).
+
+Original dataset:
+
+PBMC 10k CITE-seq (10x Genomics)  
+https://cf.10xgenomics.com/samples/cell-exp/3.0.0/pbmc_10k_protein_v3/pbmc_10k_protein_v3_filtered_feature_bc_matrix.tar.gz
+
+For the FMLE package, this dataset was converted into a lightweight demo object (`fmle_demo.rds`) to allow examples and the vignette to run quickly.
+
+The demo dataset includes:
+- a reduced set of gene-expression features
+- the protein panel used in the example workflow
+- train/test splits and latent representations (`Z`)
+
+In the experiments reported in the FMLE manuscript, models were trained using larger feature sets (e.g. ~2000 highly variable genes). The reduced demo dataset is intended only for reproducible examples and fast package demonstrations.
 
 ## Single-task example
 ```r

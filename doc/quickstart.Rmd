@@ -21,6 +21,15 @@ This vignette shows a minimal end-to-end workflow on the bundled demo data.
 
 ## Load demo data
 
+The bundled demo object is derived from the PBMC 10k CITE-seq dataset
+(10x Genomics, v3 chemistry) and is reduced to a smaller feature set
+for fast execution of the vignette examples.
+
+Original dataset:
+
+PBMC 10k CITE-seq (10x Genomics)  
+https://cf.10xgenomics.com/samples/cell-exp/3.0.0/pbmc_10k_protein_v3/pbmc_10k_protein_v3_filtered_feature_bc_matrix.tar.gz
+
 ```{r}
 library(FMLE)
 

@@ -75,12 +75,17 @@ pA <- pA +
 # ----------------------------
 prot <- "HLA.DR"
 rna_gene <- "HLA-DRA"
-bench <- 1  # set 1 or 2 or 3
-base  <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_%d", bench))
-
-ds    <- "citeseq_v1"
+bench <- 1  # set 1, 2, or 3
+ds <- "citeseq_v1"
+base <- file.path(cfg$out_root, sprintf("benchmarks_%d", bench))
+ds_dir <- file.path(base, ds)
 out_dir <- file.path(base, "FMLE", paste0(ds, "_final"))
-seu_prep <- readRDS(file.path(base, ds, "seu_final.rds")) 
+dir.create(ds_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+seu_prep <- readRDS(file.path(ds_dir, "seu_final.rds")) 
+
+stopifnot(file.exists(file.path(ds_dir, "seu_final.rds")))
+stopifnot(file.exists(file.path(out_dir, paste0("final_", prot, ".rds"))))
 
 obj   <- readRDS(file.path(out_dir, paste0("final_", prot, ".rds")))
 alpha <- obj$alpha_test

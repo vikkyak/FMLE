@@ -7,12 +7,10 @@ option_list <- list(
   make_option("--out_root", type="character", default=here::here("results")),
   make_option("--data_root", type="character", default=here::here("data")),
   make_option("--seed", type="integer", default=42),
-
   make_option("--scale_factor", type="double", default=1e4),
   make_option("--hvg_n", type="integer", default=2000),
   make_option("--pca_npcs", type="integer", default=25),
   make_option("--gate_pcs", type="integer", default=20),
-
   make_option("--adt_total_q", type="double", default=0.995),
   make_option("--cap_q", type="double", default=0.995)
 )
@@ -33,4 +31,3 @@ cfg <- list(
 
 dir.create(cfg$out_root, recursive = TRUE, showWarnings = FALSE)
 set.seed(cfg$seed)
-

@@ -18,21 +18,21 @@ suppressPackageStartupMessages({
 
 
 bench <- 1  # set 1 or 2 or 3
-# base  <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_c_doror_%d", bench))
-# base  <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_%d", bench))
-base  <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_trasnfer_%d", bench))
-# base  <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_spatial_%d", bench))
 ds    <- "citeseq_v1"
+# base  <- file.path(cfg$out_root, sprintf("benchmarks_c_doror_%d", bench))
+# base  <- file.path(cfg$out_root, sprintf("benchmarks_%d", bench))
+base <- file.path(cfg$out_root, sprintf("benchmarks_transfer_%d", bench))
+# base  <- file.path(cfg$out_root, sprintf("benchmarks_spatial_%d", bench))
 dir.create(base, recursive = TRUE, showWarnings = FALSE)
-
-
-train_cells <- readRDS(file.path(base, ds, "train_cells.rds"))
-test_cells  <- readRDS(file.path(base, ds, "test_cells.rds"))
-X           <- readRDS(file.path(base, ds, "X.rds"))
-Z           <- readRDS(file.path(base, ds, "Z.rds"))
-adt_mat     <- readRDS(file.path(base, ds, "adt_mat.rds"))
+ds_dir <- file.path(base, ds)
+dir.create(ds_dir, recursive = TRUE, showWarnings = FALSE)
+train_cells <- readRDS(file.path(ds_dir, "train_cells.rds"))
+test_cells  <- readRDS(file.path(ds_dir, "test_cells.rds"))
+X           <- readRDS(file.path(ds_dir, "X.rds"))
+Z           <- readRDS(file.path(ds_dir, "Z.rds"))
+adt_mat     <- readRDS(file.path(ds_dir, "adt_mat.rds"))
 if (bench == 1) {
-  groups    <- readRDS(file.path(base, ds, "groups.rds"))
+  groups    <- readRDS(file.path(ds_dir, "groups.rds"))
 } else {
   groups <- NULL
 }
@@ -57,8 +57,8 @@ if (bench == 1) {
   stopifnot(all(test_cells  %in% names(groups)))
 }
 
-out_dir <- file.path(base, "FMLE", "citeseq_v1_cv")
-dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+out_dir <- file.path(base, "FMLE", paste0(ds, "_cv"))
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 plan(multicore, workers = 16)   # 12–14 is good on your 16-core (no SMT) system
 Sys.setenv(OMP_NUM_THREADS="1", MKL_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1")

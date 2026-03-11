@@ -349,6 +349,12 @@ end-to-end workflow on the bundled demo data.</p>
 </div>
 <div id="load-demo-data" class="section level2">
 <h2>Load demo data</h2>
+<p>The bundled demo object is derived from the PBMC 10k CITE-seq dataset
+(10x Genomics, v3 chemistry) and is reduced to a smaller feature set for
+fast execution of the vignette examples.</p>
+<p>Original dataset:</p>
+<p>PBMC 10k CITE-seq (10x Genomics)<br />
+<a href="https://cf.10xgenomics.com/samples/cell-exp/3.0.0/pbmc_10k_protein_v3/pbmc_10k_protein_v3_filtered_feature_bc_matrix.tar.gz" class="uri">https://cf.10xgenomics.com/samples/cell-exp/3.0.0/pbmc_10k_protein_v3/pbmc_10k_protein_v3_filtered_feature_bc_matrix.tar.gz</a></p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(FMLE)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>demo <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;fmle_demo.rds&quot;</span>, <span class="at">package =</span> <span class="st">&quot;FMLE&quot;</span>))</span>
@@ -361,11 +367,11 @@ end-to-end workflow on the bundled demo data.</p>
 <span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>Z_test  <span class="ot">&lt;-</span> demo<span class="sc">$</span>Z_test</span>
 <span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
 <span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">dim</span>(X_train)</span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co">#&gt; [1] 4683  100</span></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co">#&gt; [1] 4694  100</span></span>
 <span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="fu">dim</span>(Y_train)</span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="co">#&gt; [1] 4683   14</span></span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="co">#&gt; [1] 4694   14</span></span>
 <span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a><span class="fu">dim</span>(Z_train)</span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="co">#&gt; [1] 4683    8</span></span></code></pre></div>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="co">#&gt; [1] 4694    8</span></span></code></pre></div>
 </div>
 <div id="preprocessing" class="section level2">
 <h2>Preprocessing</h2>
@@ -417,21 +423,21 @@ end-to-end workflow on the bundled demo data.</p>
 <span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
 <span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; $m</span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; [1] 1.8</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; [1] 1.6</span></span>
 <span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; $lambda</span></span>
 <span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; [1] 0.001</span></span>
 <span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt; $mse</span></span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; [1] 0.08549884</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; [1] 0.09881837</span></span>
 <span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="fu">head</span>(cv<span class="sc">$</span>table)</span>
 <span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt;   R   m lambda        MSE</span></span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; 1 2 1.6  0.000 0.09609118</span></span>
-<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt; 2 3 1.6  0.000 0.08659279</span></span>
-<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt; 3 2 1.8  0.000 0.09262784</span></span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt; 4 3 1.8  0.000 0.08589012</span></span>
-<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt; 5 2 1.6  0.001 0.09604997</span></span>
-<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt; 6 3 1.6  0.001 0.08607532</span></span></code></pre></div>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; 1 2 1.6  0.000 0.10369331</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt; 2 3 1.6  0.000 0.09931876</span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt; 3 2 1.8  0.000 0.10358180</span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt; 4 3 1.8  0.000 0.09940194</span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt; 5 2 1.6  0.001 0.10353836</span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt; 6 3 1.6  0.001 0.09881837</span></span></code></pre></div>
 </div>
 <div id="step-2-refit-on-the-full-training-set-using-the-best-selected-values" class="section level2">
 <h2>Step 2: refit on the full training set using the best selected
@@ -455,7 +461,7 @@ values</h2>
 <span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>fit<span class="sc">$</span>R</span>
 <span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
 <span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>fit<span class="sc">$</span>m</span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; [1] 1.8</span></span></code></pre></div>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; [1] 1.6</span></span></code></pre></div>
 </div>
 <div id="step-3-predict-on-held-out-cells" class="section level2">
 <h2>Step 3: predict on held-out cells</h2>
@@ -477,9 +483,9 @@ values</h2>
 <span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">value =</span> <span class="fu">c</span>(pearson, spearman, mse)</span>
 <span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>)</span>
 <span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;     metric      value</span></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; 1  Pearson 0.96178988</span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; 2 Spearman 0.82981346</span></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; 3      MSE 0.07498816</span></span></code></pre></div>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; 1  Pearson 0.95214797</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; 2 Spearman 0.80280058</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; 3      MSE 0.09319219</span></span></code></pre></div>
 </div>
 <div id="single-task-results-across-multiple-proteins" class="section level2">
 <h2>Single-task results across multiple proteins</h2>
@@ -544,20 +550,20 @@ values</h2>
 <span id="cb7-59"><a href="#cb7-59" tabindex="-1"></a>res_tab<span class="sc">$</span>MSE <span class="ot">&lt;-</span> <span class="fu">round</span>(res_tab<span class="sc">$</span>MSE, <span class="dv">3</span>)</span>
 <span id="cb7-60"><a href="#cb7-60" tabindex="-1"></a>res_tab</span>
 <span id="cb7-61"><a href="#cb7-61" tabindex="-1"></a><span class="co">#&gt;             protein R   m lambda Pearson Spearman   MSE</span></span>
-<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a><span class="co">#&gt; 1     CD3-TotalSeqB 3 1.8  0.001   0.962    0.830 0.075</span></span>
-<span id="cb7-63"><a href="#cb7-63" tabindex="-1"></a><span class="co">#&gt; 2     CD4-TotalSeqB 3 1.8  0.001   0.879    0.858 0.227</span></span>
-<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a><span class="co">#&gt; 3    CD8a-TotalSeqB 3 1.8  0.000   0.763    0.557 0.418</span></span>
-<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a><span class="co">#&gt; 4    CD14-TotalSeqB 2 1.6  0.001   0.973    0.829 0.053</span></span>
-<span id="cb7-66"><a href="#cb7-66" tabindex="-1"></a><span class="co">#&gt; 5    CD15-TotalSeqB 2 1.8  0.000   0.339    0.229 0.885</span></span>
-<span id="cb7-67"><a href="#cb7-67" tabindex="-1"></a><span class="co">#&gt; 6    CD16-TotalSeqB 2 1.8  0.001   0.803    0.517 0.355</span></span>
-<span id="cb7-68"><a href="#cb7-68" tabindex="-1"></a><span class="co">#&gt; 7    CD56-TotalSeqB 3 1.8  0.000   0.852    0.574 0.274</span></span>
-<span id="cb7-69"><a href="#cb7-69" tabindex="-1"></a><span class="co">#&gt; 8    CD19-TotalSeqB 3 1.8  0.001   0.898    0.348 0.194</span></span>
-<span id="cb7-70"><a href="#cb7-70" tabindex="-1"></a><span class="co">#&gt; 9    CD25-TotalSeqB 2 1.8  0.001   0.579    0.485 0.666</span></span>
-<span id="cb7-71"><a href="#cb7-71" tabindex="-1"></a><span class="co">#&gt; 10 CD45RA-TotalSeqB 3 1.8  0.001   0.877    0.864 0.231</span></span>
-<span id="cb7-72"><a href="#cb7-72" tabindex="-1"></a><span class="co">#&gt; 11 CD45RO-TotalSeqB 3 1.8  0.001   0.863    0.838 0.254</span></span>
-<span id="cb7-73"><a href="#cb7-73" tabindex="-1"></a><span class="co">#&gt; 12   PD-1-TotalSeqB 2 1.8  0.001   0.562    0.433 0.685</span></span>
-<span id="cb7-74"><a href="#cb7-74" tabindex="-1"></a><span class="co">#&gt; 13  TIGIT-TotalSeqB 2 1.8  0.001   0.733    0.601 0.463</span></span>
-<span id="cb7-75"><a href="#cb7-75" tabindex="-1"></a><span class="co">#&gt; 14  CD127-TotalSeqB 2 1.8  0.001   0.917    0.864 0.160</span></span></code></pre></div>
+<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a><span class="co">#&gt; 1     CD3-TotalSeqB 3 1.6  0.001   0.952    0.803 0.093</span></span>
+<span id="cb7-63"><a href="#cb7-63" tabindex="-1"></a><span class="co">#&gt; 2     CD4-TotalSeqB 3 1.8  0.001   0.906    0.864 0.182</span></span>
+<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a><span class="co">#&gt; 3    CD8a-TotalSeqB 3 1.8  0.001   0.864    0.554 0.234</span></span>
+<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a><span class="co">#&gt; 4    CD14-TotalSeqB 3 1.6  0.001   0.971    0.807 0.055</span></span>
+<span id="cb7-66"><a href="#cb7-66" tabindex="-1"></a><span class="co">#&gt; 5    CD15-TotalSeqB 2 1.6  0.001   0.129    0.187 0.960</span></span>
+<span id="cb7-67"><a href="#cb7-67" tabindex="-1"></a><span class="co">#&gt; 6    CD16-TotalSeqB 3 1.6  0.001   0.770    0.470 0.417</span></span>
+<span id="cb7-68"><a href="#cb7-68" tabindex="-1"></a><span class="co">#&gt; 7    CD56-TotalSeqB 3 1.8  0.001   0.822    0.524 0.325</span></span>
+<span id="cb7-69"><a href="#cb7-69" tabindex="-1"></a><span class="co">#&gt; 8    CD19-TotalSeqB 3 1.6  0.001   0.906    0.296 0.194</span></span>
+<span id="cb7-70"><a href="#cb7-70" tabindex="-1"></a><span class="co">#&gt; 9    CD25-TotalSeqB 3 1.8  0.001   0.472    0.424 0.826</span></span>
+<span id="cb7-71"><a href="#cb7-71" tabindex="-1"></a><span class="co">#&gt; 10 CD45RA-TotalSeqB 3 1.8  0.001   0.812    0.805 0.351</span></span>
+<span id="cb7-72"><a href="#cb7-72" tabindex="-1"></a><span class="co">#&gt; 11 CD45RO-TotalSeqB 3 1.8  0.001   0.784    0.767 0.384</span></span>
+<span id="cb7-73"><a href="#cb7-73" tabindex="-1"></a><span class="co">#&gt; 12   PD-1-TotalSeqB 2 1.8  0.001   0.478    0.387 0.752</span></span>
+<span id="cb7-74"><a href="#cb7-74" tabindex="-1"></a><span class="co">#&gt; 13  TIGIT-TotalSeqB 3 1.6  0.001   0.663    0.552 0.593</span></span>
+<span id="cb7-75"><a href="#cb7-75" tabindex="-1"></a><span class="co">#&gt; 14  CD127-TotalSeqB 3 1.6  0.001   0.869    0.818 0.253</span></span></code></pre></div>
 </div>
 <div id="important-preprocessing-note" class="section level2">
 <h2>Important preprocessing note</h2>

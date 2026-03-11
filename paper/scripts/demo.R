@@ -1,5 +1,4 @@
 
-
 # PBMC 10k CITE-seq (10x Genomics, v3 chemistry)
 
 # https://cf.10xgenomics.com/samples/cell-exp/3.0.0/pbmc_10k_protein_v3/pbmc_10k_protein_v3_filtered_feature_bc_matrix.tar.gz
@@ -9,24 +8,15 @@ suppressPackageStartupMessages({
   library(Matrix)
   library(Seurat)
   library(dplyr)
-  library(reticulate)
-  use_condaenv("sclinear", required = TRUE)
-  py_config() 
-  library(scLinear)
 })
-
-
 files <- c("_config.R", "preprocess_helpers_fmle.R", "preprocess_fmle.R")
 paths <- file.path(here::here(), "paper", "scripts", files)
 stopifnot(all(file.exists(paths)))
 invisible(lapply(paths, source))
 
-out_base <- file.path(cfg$out_root, "citeseq_v1")
-out_ctp  <- file.path(cfg$out_root, "ctp")
-dir.create(out_base, recursive=TRUE, showWarnings=FALSE)
-dir.create(out_ctp,  recursive=TRUE, showWarnings=FALSE)
+data_dir <- file.path(cfg$data_root, "filtered_feature_bc_matrix")
+stopifnot(dir.exists(data_dir))
 
-data_dir <- file.path(cfg$out_root, "filtered_feature_bc_matrix/")
 raw <- Read10X(data.dir = data_dir)
 names(raw)
 
@@ -84,14 +74,14 @@ seu <- subset(
 adt_counts0 <- GetAssayData(seu, assay="ADT", layer="counts")
 cs <- Matrix::colSums(adt_counts0)
 summary(cs)
-thr <- as.numeric(quantile(cs, cfg$adt_total_q))
+thr <- as.numeric(quantile(cs, 0.995))
 keep_cells <- names(cs)[cs <= thr]
 seu <- subset(seu, cells = keep_cells)
 
 stopifnot(identical(colnames(seu[["RNA"]]), colnames(seu[["ADT"]])))
 
 # ============================================================
-# 3) preprocess_fmle (this FINALIZES the cell set)
+# preprocess_fmle (this FINALIZES the cell set)
 # ============================================================
 seu_final <- preprocess_fmle(
   object = seu,
@@ -113,40 +103,15 @@ adt_counts <- adt_counts[keep_prot, , drop=FALSE]
 seu_final[["ADT"]] <- CreateAssayObject(counts = adt_counts)
 
 stopifnot(identical(colnames(seu_final[["RNA"]]), colnames(seu_final[["ADT"]])))
-
-saveRDS(seu_final, file.path(out_base, "seu_final.rds"))
-
-
-# ============================================================
-# 4) Build X (HVG lognorm), Z (PCA), Y (raw ADT counts) from FINAL object
-# ============================================================
-seu_final <- NormalizeData(seu_final, assay="RNA", normalization.method="LogNormalize", scale.factor=cfg$scale_factor)
-seu_final <- FindVariableFeatures(seu_final, assay="RNA", selection.method="vst", nfeatures=cfg$hvg_n, verbose=FALSE)
-hvg <- VariableFeatures(seu_final)
-
-# ============================================================
-# Cross trasfer common genes from all three datasets are gene_panel_2000.rds
-bench <- 2
-base <- path.expand(sprintf("~/cfg$data_root/FMLE/benchmarks_%d", bench))
-scl    <- file.path(base, "sclinear") 
-ds      <- "citeseq_v1"
-seu_final <- readRDS(file.path(base, ds, "seu_final.rds"))  
-hvg <- readRDS("~/cfg$data_root/FMLE/transfer_preds/gene_panel_2000.rds")
-stopifnot(all(hvg %in% rownames(GetAssayData(seu_final, assay="RNA", layer="data"))))
-stopifnot(anyDuplicated(hvg) == 0)
 seu_final <- NormalizeData(seu_final, assay="RNA", normalization.method="LogNormalize", scale.factor=1e4)
-# ============================================================
-
-
+seu_final <- FindVariableFeatures(seu_final, assay="RNA", selection.method="vst", nfeatures=100, verbose=FALSE)
+hvg <- VariableFeatures(seu_final)
 seu_final <- ScaleData(seu_final, assay="RNA", features=hvg, verbose=FALSE)
-ElbowPlot(seu_final, ndims = 50)
-seu_final <- RunPCA(seu_final, assay="RNA", features=hvg, npcs=cfg$pca_npcs, verbose=FALSE)
+ElbowPlot(seu_final, ndims = 30)
+seu_final <- RunPCA(seu_final, assay="RNA", features=hvg, npcs=20, verbose=FALSE)
 
 Zfull <- Embeddings(seu_final, "pca")
-
-gate <- cfg$gate_pcs
-
-Z <- Zfull[, seq_len(min(gate, ncol(Zfull))), drop=FALSE]
+Z <- Zfull[, seq_len(min(8, ncol(Zfull))), drop=FALSE]
 
 X <- t(as.matrix(GetAssayData(seu_final, assay="RNA", layer="data")[hvg, , drop=FALSE]))
 rownames(X) <- colnames(seu_final)
@@ -167,46 +132,27 @@ stopifnot(
 )
 
 # ============================================================
-# 5) Train/test split + save RDS for FMLE/scLinear baselines
+# Train/test split + save RDS for FMLE/scLinear baselines
 # ============================================================
-
+set.seed(42)
 all_cells <- rownames(X)
 train_cells <- sample(all_cells, size = floor(0.7 * length(all_cells)))
 test_cells  <- setdiff(all_cells, train_cells)
 
-saveRDS(train_cells, file.path(out_base, "train_cells.rds"))
-saveRDS(test_cells,  file.path(out_base, "test_cells.rds"))
-saveRDS(X,           file.path(out_base, "X.rds"))        # cells x genes
-saveRDS(Z,           file.path(out_base, "Z.rds"))        # cells x PCs
-saveRDS(Y_counts,    file.path(out_base, "adt_mat.rds"))  # proteins x cells
-
-# ============================================================
-# 6) Export cTPnet CSVs (cells x features)
-# ============================================================
-rna_train <- X[train_cells, , drop=FALSE]
-rna_test  <- X[test_cells,  , drop=FALSE]
-
-adt_train <- t(Y_counts[, train_cells, drop=FALSE])  # cells x proteins
-adt_test  <- t(Y_counts[, test_cells,  drop=FALSE])  # cells x proteins
-
-stopifnot(identical(rownames(rna_train), rownames(adt_train)))
-stopifnot(identical(rownames(rna_test),  rownames(adt_test)))
-
-write.csv(rna_train, file.path(out_ctp, "rna_train.csv"))
-write.csv(rna_test,  file.path(out_ctp, "rna_test.csv"))
-write.csv(adt_train, file.path(out_ctp, "adt_train.csv"))
-write.csv(adt_test,  file.path(out_ctp, "adt_test.csv"))
-
-cat("DONE\n",
-    "Final cells:", length(common), "\n",
-    "Proteins:", nrow(Y_counts), "\n",
-    "HVGs:", ncol(X), "\n",
-    "Saved RDS:", out_base, "\n",
-    "Saved cTPnet CSV:", out_ctp, "\n", sep="")
+demo <- list(
+  X_train = X[train_cells, , drop = FALSE],
+  X_test  = X[test_cells,  , drop = FALSE],
+  Z_train = Z[train_cells, , drop = FALSE],
+  Z_test  = Z[test_cells,  , drop = FALSE],
+  Y_train = t(as.matrix(Y_counts[, train_cells, drop = FALSE])),
+  Y_test  = t(as.matrix(Y_counts[, test_cells,  drop = FALSE]))
+)
 
 
-writeLines(capture.output(sessionInfo()),
-           file.path(cfg$out_root, "sessionInfo.txt"))
-saveRDS(cfg, file.path(cfg$out_root, "config_used.rds"))
+extdata_dir <- here::here("inst", "extdata")
+dir.create(extdata_dir, recursive = TRUE, showWarnings = FALSE)
 
+out_file <- file.path(extdata_dir, "fmle_demo.rds")
+saveRDS(demo, file = out_file, compress = "xz")
+stopifnot(file.exists(out_file))
 

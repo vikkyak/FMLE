@@ -27,13 +27,12 @@ suppressPackageStartupMessages({
   library(tidyr)
   library(readr)
   library(FMLE)
-  library(reticulate)
-  use_condaenv("sclinear", required = TRUE)
-  py_config() 
-  library(scLinear)
 })
 
-source(here::here("inst", "scripts", "_config.R", "preprocess_fmle.R"))
+files <- c("_config.R", "preprocess_helpers_fmle.R", "preprocess_fmle.R")
+paths <- file.path(here::here(), "paper", "scripts", files)
+stopifnot(all(file.exists(paths)))
+invisible(lapply(paths, source))
 
 out_base <- file.path(cfg$out_root, "citeseq_v1")
 out_ctp  <- file.path(cfg$out_root, "ctp")
@@ -134,27 +133,27 @@ stopifnot(identical(colnames(seu[["RNA"]]), colnames(seu[["ADT"]])))
 # ============================================================
 # 3) preprocess_fmle (this FINALIZES the cell set)
 # ============================================================
-# source("~/Desktop/FMLE/preprocess_fmle.R")
-# seu_final <- preprocess_fmle(
-#   object = seu,
-#   annotation_selfCluster  = TRUE,
-#   remove_doublets = TRUE,
-#   low_qc_cell_removal = TRUE,
-#   integrate_data = FALSE,
-#   remove_empty_droplets = FALSE,
-#   resolution = 0.8,
-#   seed = 42,
-#   return_plots = FALSE,
-#   print_plots = FALSE,
-#   species = "Hs"
-# )
 
-seu_final <- scLinear::prepare_data(
-  seu,
-  integrate_data          = FALSE,
+seu_final <- preprocess_fmle(
+  object = seu,
   annotation_selfCluster  = TRUE,
-  remove_empty_droplets   = FALSE
+  remove_doublets = TRUE,
+  low_qc_cell_removal = TRUE,
+  integrate_data = FALSE,
+  remove_empty_droplets = FALSE,
+  resolution = 0.8,
+  seed = 42,
+  return_plots = FALSE,
+  print_plots = FALSE,
+  species = "Hs"
 )
+
+# seu_final <- scLinear::prepare_data(
+#   seu,
+#   integrate_data          = FALSE,
+#   annotation_selfCluster  = TRUE,
+#   remove_empty_droplets   = FALSE
+# )
 
 stopifnot(identical(colnames(seu_final[["RNA"]]), colnames(seu_final[["ADT"]])))
 

@@ -256,15 +256,18 @@ eval_transfer_calibrated <- function(A, B, yhatA_train_raw, yhatB_test_raw,
 # ============================================================
 # 7) RUN: load DS, enforce ONE naming + SAME genes
 # ============================================================
-base_1 <- path.expand("~/Desktop/FMLE/benchmarks_1/")
-base_2 <- path.expand("~/Desktop/FMLE/benchmarks_2/")
-base_3 <- path.expand("~/Desktop/FMLE/benchmarks_3/")
+base_1 <- file.path(cfg$out_root, "benchmarks_1")
+base_2 <- file.path(cfg$out_root, "benchmarks_2")
+base_3 <- file.path(cfg$out_root, "benchmarks_3")
 
 ds_paths <- list(
   A = file.path(base_1, "citeseq_v1"),
   B = file.path(base_2, "citeseq_v1"),
   C = file.path(base_3, "citeseq_v1")
 )
+
+dirs <- c(base_1, base_2, base_3, unlist(ds_paths, use.names = FALSE))
+invisible(lapply(dirs, dir.create, recursive = TRUE, showWarnings = FALSE))
 
 DS <- lapply(ds_paths, load_ds)
 
@@ -516,12 +519,17 @@ readr::write_csv(res_scl_CB, file.path(ctpCB_dir, "res_scl_CB.csv"))
 #  cTPnet 
 # ============================================================
 
-ctpAB_dir <- path.expand("~/Desktop/FMLE/transfer_preds/ctp_A_to_B")
-ctpAC_dir <- path.expand("~/Desktop/FMLE/transfer_preds/ctp_A_to_C")
-ctpBA_dir <- path.expand("~/Desktop/FMLE/transfer_preds/ctp_B_to_A")
-ctpBC_dir <- path.expand("~/Desktop/FMLE/transfer_preds/ctp_B_to_C")
-ctpCA_dir <- path.expand("~/Desktop/FMLE/transfer_preds/ctp_C_to_A")
-ctpCB_dir <- path.expand("~/Desktop/FMLE/transfer_preds/ctp_C_to_B")
+transfer_root <- file.path(cfg$out_root, "transfer_preds")
+
+ctpAB_dir <- file.path(transfer_root, "ctp_A_to_B")
+ctpAC_dir <- file.path(transfer_root, "ctp_A_to_C")
+ctpBA_dir <- file.path(transfer_root, "ctp_B_to_A")
+ctpBC_dir <- file.path(transfer_root, "ctp_B_to_C")
+ctpCA_dir <- file.path(transfer_root, "ctp_C_to_A")
+ctpCB_dir <- file.path(transfer_root, "ctp_C_to_B")
+
+dirs <- c(ctpAB_dir, ctpAC_dir, ctpBA_dir, ctpBC_dir, ctpCA_dir, ctpCB_dir)
+invisible(lapply(dirs, dir.create, recursive = TRUE, showWarnings = FALSE))
 
 read_ctp <- function(path){
   as.matrix(read.csv(path, row.names=1, check.names=FALSE)) # proteins x cells

@@ -17,20 +17,24 @@ suppressPackageStartupMessages({
 # -----------------------------
 # 0) Load fixed benchmark artifacts
 # -----------------------------
-bench <- 3  # set 1 or 2 or 3
-# base  <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_c_doror_%d", bench))
-base <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_%d", bench))
+bench <- 3  # set 1, 2, or 3
+ds <- "citeseq_v1"
 
-ds      <- "citeseq_v1"
-cv_dir  <- file.path(base, "FMLE", paste0(ds, "_cv"))
+base <- file.path(cfg$out_root, sprintf("benchmarks_%d", bench))
+ds_dir <- file.path(base, ds)
+cv_dir <- file.path(base, "FMLE", paste0(ds, "_cv"))
 
-train_cells <- readRDS(file.path(base, ds, "train_cells.rds"))
-test_cells  <- readRDS(file.path(base, ds, "test_cells.rds"))
-X      <- readRDS(file.path(base, ds, "X.rds"))        # cells x genes
-Z      <- readRDS(file.path(base, ds, "Z.rds"))        # cells x PCs
-adt_mat<- readRDS(file.path(base, ds, "adt_mat.rds"))  # proteins x cells
+dir.create(ds_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(cv_dir, recursive = TRUE, showWarnings = FALSE)
+
+
+train_cells <- readRDS(file.path(ds_dir, "train_cells.rds"))
+test_cells  <- readRDS(file.path(ds_dir, "test_cells.rds"))
+X      <- readRDS(file.path(ds_dir, "X.rds"))        # cells x genes
+Z      <- readRDS(file.path(ds_dir, "Z.rds"))        # cells x PCs
+adt_mat<- readRDS(file.path(ds_dir, "adt_mat.rds"))  # proteins x cells
 if (bench == 1) {
-  groups <- readRDS(file.path(base, ds, "groups.rds"))
+  groups <- readRDS(file.path(ds_dir, "groups.rds"))
 } else {
   groups <- NULL
 }

@@ -16,11 +16,11 @@ suppressPackageStartupMessages({
 bench <- 1  # set 1 or 2 or 3
 ds      <- "citeseq_v1"
 # base <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_%d", bench))
-base  <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_c_doror_%d", bench))
+base <- file.path(cfg$out_root, sprintf("benchmarks_c_doror_%d", bench))
 out_dir <- file.path(base, "FMLE", paste0(ds, "_final"))
-dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 ctp    <- file.path(base, "ctp") 
 scl    <- file.path(base, "sclinear") 
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 fmle_ds_by_bench <- c(
   "citeseq_v1_final",  # bench 1 FMLE folder
@@ -97,12 +97,22 @@ pA_kaggle <- ggplot(df_kaggle, aes(x=method, y=Pearson, color=method)) +
 
 
 
-results_fmle <- read.csv("~/Desktop/FMLE/benchmarks_c_doror_1/FMLE/citeseq_v1_final/fmle_test_metrics.csv",
-                         stringsAsFactors = FALSE)
-results_sclinear <- read.csv("~/Desktop/FMLE/benchmarks_c_doror_1/sclinear/scLinear_test_metrics_fmle_fair.csv",
-                             stringsAsFactors = FALSE)
-results_ctpnet  <- read.csv("~/Desktop/FMLE/benchmarks_c_doror_1/ctp/ctpnet_test_metrics_FMLEscale.csv",
-                            stringsAsFactors = FALSE)
+base <- file.path(cfg$out_root, "benchmarks_c_doror_1")
+
+results_fmle <- read.csv(
+  file.path(base, "FMLE", "citeseq_v1_final", "fmle_test_metrics.csv"),
+  stringsAsFactors = FALSE
+)
+
+results_sclinear <- read.csv(
+  file.path(base, "sclinear", "scLinear_test_metrics_fmle_fair.csv"),
+  stringsAsFactors = FALSE
+)
+
+results_ctpnet <- read.csv(
+  file.path(base, "ctp", "ctpnet_test_metrics_FMLEscale.csv"),
+  stringsAsFactors = FALSE
+)
 
 make_cmp_one_dataset <- function(results_fmle, res_sclinear, res_ctpnet=NULL) {
   # standardize colnames expected

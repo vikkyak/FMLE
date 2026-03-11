@@ -16,13 +16,24 @@ suppressPackageStartupMessages({
   library(scLinear)
 })
 
+files <- c("_config.R", "preprocess_helpers_fmle.R", "preprocess_fmle.R")
+paths <- file.path(here::here(), "paper", "scripts", files)
+stopifnot(all(file.exists(paths)))
+invisible(lapply(paths, source))
 # -----------------------
 # Paths
 # -----------------------
-h5 <- "~/Desktop/FMLE/benchmarks_3/GSM4949911_X061-AP0C1W1_leukopak_perm-cells_tea_fulldepth_cellranger-arc_filtered_feature_bc_matrix.h5"
-adt_csv_gz <- "~/Desktop/FMLE/benchmarks_3/GSM4949911_adt_counts.csv.gz"  # only used if H5 lacks Antibody Capture
+tea_dir <- file.path(cfg$data_root, "tea_seq")
+h5 <- file.path(
+  tea_dir,
+  "GSM4949911_X061-AP0C1W1_leukopak_perm-cells_tea_fulldepth_cellranger-arc_filtered_feature_bc_matrix.h5"
+)
 
-source(here::here("inst", "scripts", "_config.R","preprocess_fmle.R"))
+adt_csv_gz <- file.path(
+  tea_dir,
+  "GSM4949911_adt_counts.csv.gz"
+)   # only used if H5 lacks Antibody Capture
+
 
 out_base <- file.path(cfg$out_root, "citeseq_v1")
 out_ctp  <- file.path(cfg$out_root, "ctp")
