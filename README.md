@@ -127,7 +127,7 @@ FMLE preserves regime structure and predictive advantage under donor shift, supp
 
 <p align="center"> <img src="figures/fmle_cross_donor.jpg" alt="FMLE cross-donor results" width="1100"> </p>
 
-*_Figure_ 3. FMLE regimes generalize across donors, preserve structured RNA–protein coupling, and improve held-out donor prediction relative to global and baseline models.
+_Figure_ 3. FMLE regimes generalize across donors, preserve structured RNA–protein coupling, and improve held-out donor prediction relative to global and baseline models.
 
 ## Vignette
 
