@@ -119,7 +119,7 @@ Across multiple PBMC datasets, FMLE improves RNA→protein prediction relative t
 
 <p align="center"> <img src="figures/fmle_benchmark.png" alt="FMLE benchmark results" width="1100"> </p>
 
-*Figure 2. FMLE achieves stronger per-protein predictive performance across benchmark datasets and wins more frequently than competing methods.
+_Figure_ 2. FMLE achieves stronger per-protein predictive performance across benchmark datasets and wins more frequently than competing methods.
 
 ## Cross-donor generalization
 
@@ -127,7 +127,7 @@ FMLE preserves regime structure and predictive advantage under donor shift, supp
 
 <p align="center"> <img src="figures/fmle_cross_donor.jpg" alt="FMLE cross-donor results" width="1100"> </p>
 
-*Figure 3. FMLE regimes generalize across donors, preserve structured RNA–protein coupling, and improve held-out donor prediction relative to global and baseline models.
+*_Figure_ 3. FMLE regimes generalize across donors, preserve structured RNA–protein coupling, and improve held-out donor prediction relative to global and baseline models.
 
 ## Vignette
 
