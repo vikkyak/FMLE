@@ -129,6 +129,71 @@ data.frame(
 )
 
 ```
+## Single-task results across multiple proteins
+
+```{r}
+proteins_to_show <- colnames(Y_train)
+res_list <- vector("list", length(proteins_to_show))
+
+for (j in seq_along(proteins_to_show)) {
+  prot <- proteins_to_show[j]
+
+  tf_y <- cap_and_scale_fit_local(Y_train[, j], q = q)
+  y_train_j <- cap_and_scale_apply_local(Y_train[, j], tf_y)
+  y_test_j  <- cap_and_scale_apply_local(Y_test[, j], tf_y)
+
+  cv_j <- fmle_cv_parallel(
+    X = X_train,
+    y = Y_train[, j],
+    Z = Z_train,
+    R_grid = c(2, 3),
+    m_grid = c(1.6, 1.8),
+    lambda_grid = c(0, 1e-3),
+    folds = 3,
+    seed = 1,
+    exec = "sequential",
+    verbose = FALSE
+  )
+
+  best_j <- cv_j$best
+
+  fit_j <- fmle_train(
+    X = X_train,
+    y = y_train_j,
+    Z = Z_train,
+    R = best_j$R,
+    m = best_j$m,
+    lambda_l1 = best_j$lambda,
+    ridge = 1e-6,
+    standardize = TRUE,
+    seed = 1
+  )
+
+  pred_j <- fmle_predict(
+    model = fit_j,
+    X_new = X_test,
+    Z_new = Z_test,
+    return_se = TRUE
+  )
+
+  res_list[[j]] <- data.frame(
+    protein = prot,
+    R = best_j$R,
+    m = best_j$m,
+    lambda = best_j$lambda,
+    Pearson = cor(pred_j$mean, y_test_j, method = "pearson"),
+    Spearman = cor(pred_j$mean, y_test_j, method = "spearman"),
+    MSE = mean((pred_j$mean - y_test_j)^2)
+  )
+}
+
+res_tab <- do.call(rbind, res_list)
+res_tab$Pearson <- round(res_tab$Pearson, 3)
+res_tab$Spearman <- round(res_tab$Spearman, 3)
+res_tab$MSE <- round(res_tab$MSE, 3)
+res_tab
+```
+
 ## Benchmark summary
 
 Across multiple PBMC datasets, FMLE improves RNA→protein prediction relative to scLinear and cTPnet.
