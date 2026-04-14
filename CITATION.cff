@@ -1,6 +1,5 @@
-```yaml
 cff-version: 1.2.0
-title: "FMLE"
+title: "FMLE: Fuzzy Mixture of Linear Experts for RNA-to-protein prediction"
 message: "If you use FMLE, please cite this software."
 type: software
 authors:
@@ -8,11 +7,11 @@ authors:
     given-names: "Vikas"
     email: "vikkysingh07@gmail.com"
 license: "GPL-3.0"
-version: "0.1.0"
-date-released: "2026-03-10"
-abstract: >
-  FMLE is an R package for fuzzy mixture of linear experts modeling of
-  protein abundance from single-cell transcriptomic features, with support
-  for single-task and multi-task prediction, cross-validation, and
-  uncertainty-aware outputs.
+version: "1.0.2"
+date-released: "2026-04-14"
 repository-code: "https://github.com/vikkyak/FMLE"
+abstract: >
+  FMLE is an R package implementing fuzzy mixture-of-linear-experts models
+  for RNA-to-protein prediction from single-cell transcriptomic features.
+  The repository includes code for preprocessing, benchmarking, and transfer
+  analyses, and figure generation used in the associated manuscript.
