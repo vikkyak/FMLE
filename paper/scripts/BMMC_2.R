@@ -119,7 +119,6 @@ hvg <- VariableFeatures(seu_clean)
 seu_clean <- ScaleData(seu_clean, assay="RNA", features=hvg, verbose=FALSE)
 
 seu_clean <- RunPCA(seu_clean, assay="RNA", features=hvg, npcs=20, verbose=FALSE)
-ElbowPlot(seu_clean, ndims = 30)
 
 seu_clean <- RunAzimuth(seu_clean, reference = "bonemarrowref")
 
