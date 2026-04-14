@@ -8,11 +8,10 @@ suppressPackageStartupMessages({
   library(Matrix)
   library(Seurat)
   library(dplyr)
+  library(FMLE)
 })
-files <- c("_config.R", "preprocess_helpers_fmle.R", "preprocess_fmle.R")
-paths <- file.path(here::here(), "paper", "scripts", files)
-stopifnot(all(file.exists(paths)))
-invisible(lapply(paths, source))
+
+source(file.path(here::here(), "paper", "scripts", "_config.R"))
 
 data_dir <- file.path(cfg$data_root, "filtered_feature_bc_matrix")
 stopifnot(dir.exists(data_dir))
@@ -81,15 +80,16 @@ seu <- subset(seu, cells = keep_cells)
 stopifnot(identical(colnames(seu[["RNA"]]), colnames(seu[["ADT"]])))
 
 # ============================================================
-# preprocess_fmle (this FINALIZES the cell set)
+# preprocess 
 # ============================================================
-seu_final <- preprocess_fmle(
+set.seed(42)
+seu_final <- preprocess(
   object = seu,
   remove_doublets = TRUE,
   low_qc_cell_removal = TRUE,
-  integrate_data = FALSE,
   remove_empty_droplets = FALSE,
   resolution = 0.8,
+  do_clustering = FALSE,
   seed = 42,
   return_plots = FALSE,
   print_plots = FALSE,
@@ -107,9 +107,7 @@ seu_final <- NormalizeData(seu_final, assay="RNA", normalization.method="LogNorm
 seu_final <- FindVariableFeatures(seu_final, assay="RNA", selection.method="vst", nfeatures=100, verbose=FALSE)
 hvg <- VariableFeatures(seu_final)
 seu_final <- ScaleData(seu_final, assay="RNA", features=hvg, verbose=FALSE)
-ElbowPlot(seu_final, ndims = 30)
 seu_final <- RunPCA(seu_final, assay="RNA", features=hvg, npcs=20, verbose=FALSE)
-
 Zfull <- Embeddings(seu_final, "pca")
 Z <- Zfull[, seq_len(min(8, ncol(Zfull))), drop=FALSE]
 
@@ -134,7 +132,7 @@ stopifnot(
 # ============================================================
 # Train/test split + save RDS for FMLE/scLinear baselines
 # ============================================================
-set.seed(42)
+
 all_cells <- rownames(X)
 train_cells <- sample(all_cells, size = floor(0.7 * length(all_cells)))
 test_cells  <- setdiff(all_cells, train_cells)
