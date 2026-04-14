@@ -9,38 +9,26 @@ suppressPackageStartupMessages({
 })
 
 
-#--------------------------------------------#
-# Cross donor
-#--------------------------------------------#
+#================================================================
+# 1)  Within hashtag oligonucleotide (HTO) transfer PBMC Kaggle
+#================================================================
 
-bench <- 1  # set 1 or 2 or 3
+bench <- 1  
 ds      <- "citeseq_v1"
-# base <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_%d", bench))
-base <- file.path(cfg$out_root, sprintf("benchmarks_c_doror_%d", bench))
+base <- file.path(cfg$out_root, sprintf("benchmarks_hto_%d", bench))
 out_dir <- file.path(base, "FMLE", paste0(ds, "_final"))
 ctp    <- file.path(base, "ctp") 
 scl    <- file.path(base, "sclinear") 
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
-fmle_ds_by_bench <- c(
-  "citeseq_v1_final",  # bench 1 FMLE folder
-  "citeseq_v1_final",  # bench 2 FMLE folder 
-  "citeseq_v1_final"   # bench 3 FMLE folder 
-)
+fmle_ds_by_bench <- c("citeseq_v1_final")
 
-bench_name <- c(
-  `1` = "Kaggle PBMC",
-  `2` = "10x PBMC 10k",
-  `3` = "TEA-seq PBMC"
-)
-
+bench_name <- c(`1` = "Kaggle PBMC")
 
 bench_pick <- 1
 
 read_one_bench <- function(bench, fmle_ds){
-  
-  # base  <- path.expand(sprintf("~/Desktop/FMLE/benchmarks_c_doror_%d", bench))
-  
+
   fmle_path <- file.path(base, "FMLE", fmle_ds, "fmle_test_metrics.csv")
   scl_path  <- file.path(base, "sclinear", "scLinear_test_metrics_fmle_fair.csv")
   ctp_path  <- file.path(base, "ctp", "ctpnet_test_metrics_FMLEscale.csv")
@@ -95,10 +83,6 @@ pA_kaggle <- ggplot(df_kaggle, aes(x=method, y=Pearson, color=method)) +
 
 
 
-
-
-base <- file.path(cfg$out_root, "benchmarks_c_doror_1")
-
 results_fmle <- read.csv(
   file.path(base, "FMLE", "citeseq_v1_final", "fmle_test_metrics.csv"),
   stringsAsFactors = FALSE
@@ -115,7 +99,6 @@ results_ctpnet <- read.csv(
 )
 
 make_cmp_one_dataset <- function(results_fmle, res_sclinear, res_ctpnet=NULL) {
-  # standardize colnames expected
   stopifnot(all(c("protein","R2","Pearson") %in% colnames(results_fmle)))
   stopifnot(all(c("protein","R2","Pearson") %in% colnames(res_sclinear)))
   
@@ -153,7 +136,7 @@ summary(cmp$delta_Pearson_scLinear)
 summary(cmp$delta_Pearson_cTPnet)
 
 #----------------------------------------------------------------------------------#
-# Reviewer-proof statistics
+# Statistical test 
 #----------------------------------------------------------------------------------#
 wilcox.test(cmp$Pearson_FMLE, cmp$Pearson_scLinear, paired=TRUE)
 wilcox.test(cmp$Pearson_FMLE, cmp$Pearson_cTPnet, paired=TRUE)
@@ -209,29 +192,20 @@ p_fmle_scl <- p_fmle_scl +
 p_fmle_ctp <- p_fmle_ctp +
   guides(color = guide_legend(ncol = 1, byrow = TRUE))
 
-final1 <- pA_kaggle / p_fmle_scl / p_fmle_ctp
 
 
-# ggsave(file.path(out_dir, "Fig3_FMLE_main.pdf"),
-#        plot = final,
-#        device = cairo_pdf,
-#        width = 21, height = 10, units = "in",
-#        dpi = 300,
-#        limitsize = FALSE)
+#==============================================
+# 2) Cross-dataset transfer PBMC
+#==============================================
 
-#--------------------------------------------#
-
-#--------------------------------------------#
-# Cross data sets
-#--------------------------------------------#
+base <- file.path(cfg$out_root, "transfer_preds_PBMC")
+dir.create(base, recursive=TRUE, showWarnings=FALSE)
 
 bench_name <- c(
   A = "Kaggle PBMC",
   B = "10x PBMC 10k",
   C = "TEA-seq PBMC"
 )
-
-base <- path.expand("~/Desktop/FMLE/transfer_preds")
 
 read_one_condition <- function(train_ds, test_ds) {
   cond_dir <- file.path(base, sprintf("ctp_%s_to_%s", train_ds, test_ds))
@@ -274,9 +248,6 @@ df_all <- pmap_dfr(conds, read_one_condition) %>%
     method = factor(method, levels = c("scLinear","cTPnet","FMLE")),
     condition = factor(condition, levels = unique(condition))
   )
-
-
-
 
 p_transfer <- ggplot(df_all, aes(x = method, y = Pearson, color = method)) +
   geom_boxplot(outlier.shape = NA, width = 0.6) +
@@ -383,12 +354,12 @@ heat_df <- df_all %>%
 
 pB <- ggplot(heat_df, aes(x = transfer, y = method, fill = med)) +
   geom_tile(color = "white", linewidth = 0.8) +
-  geom_text(aes(label = sprintf("%.2f", med)), size = 5, fontface = "bold") +
+  geom_text(aes(label = sprintf("%.2f", med)), size = 4, fontface = "bold") +
   scale_fill_gradient2(
     low = "#d73027", mid = "#fee08b", high = "#1a9850",
     midpoint = 0.6, name = "Median\nPearson"
   ) +
-  theme_classic(base_size = 14) +
+  theme_classic(base_size = 12) +
   labs(x = "Train \u2192 Test", y = NULL) +
   theme(
     axis.text.x = element_text(face = "bold"),
@@ -447,6 +418,12 @@ pA_legend_source <- pA_legend_source +
     legend.key.width = unit(0, "pt")
   )
 
+scale_method <- scale_color_manual(values = c(
+  "FMLE" = "#1b9e77",
+  "scLinear" = "#d95f02",
+  "cTPnet" = "#7570b3"
+))
+
 
 pT_list <- lapply(pT_list, \(p)
                   p + scale_method + guides(color = "none", fill = "none") + theme(legend.position = "none")
@@ -470,40 +447,35 @@ grid12 <- wrap_plots(
 ) +
   plot_layout(guides = "collect", heights = rep(1,3), widths = c(1,1,1,1)) +
   plot_annotation(
-    tag_levels = list(c("a","b","c","a","d","e","f","b","g","h","i","c")),
+    tag_levels = list(c("a","b","c","j","d","e","f","k","g","h","i","l")),
     tag_prefix = "(",
     tag_suffix = ")"
   ) &
-  theme(plot.title.position = "plot",
-        plot.title = element_text(hjust = 0.5),
+  theme(
+    plot.title.position = "plot",
+    plot.title = element_text(hjust = 0.5),
     legend.position = "right",
+    legend.title = element_text(size = 10, face = "bold"),
+    legend.text  = element_text(size = 10),
     plot.tag.position = c(0.05, 0.95),
-    plot.tag = element_text(face = "bold", size = 14)
+    plot.tag = element_text(face = "bold", size = 12)
   )
-
 grid12 <- grid12 &
   theme(plot.title = element_text(margin = margin(t = 8)))
-# grid12 <- grid12 &
-#   guides(color = guide_legend(ncol = 1, byrow = TRUE)) &
-#   theme(legend.box = "vertical")
 
-# g <- patchworkGrob(grid12)
+gap <- 0.0335   
 
-gap <- 0.0335   # 1% gap between boxes
+# left box: 
+x_left   <- (0.721 - gap) / 2
+w_left   <-  0.721 - gap
 
-# left box: width = 0.75 - gap, centered at (0.75 - gap)/2
-x_left   <- (0.7 - gap) / 2
-w_left   <-  0.7 - gap
-
-# right box: width = 0.25 - gap, centered at 0.75 + (0.25 + gap)/2
+# right box: 
 gap1 <- 0.055
-x_right  <- 0.634 + (0.24 + gap1)/2
-w_right  <- 0.28 - gap1
+x_right  <- 0.652 + (0.24 + gap1)/2
+w_right  <- 0.275 - gap1
 
-box_h <- 0.97            # <- smaller than 0.99 to leave top space
-y_box <- 0.50            # <- shift box down a bit
-# y_top <- y_box + box_h/2 # top edge of box in npc
-# y_lab <- y_top + 0.015    # put label above the top edge
+box_h <- 0.97            
+y_box <- 0.50           
 
 # compute top edge as a grid unit
 y_top_u <- unit(y_box + box_h/2, "npc")
@@ -547,19 +519,19 @@ final_fig <- wrap_elements(full =
 
 
 
-final_fig
+final
 
 
-ggsave(file.path(out_dir, "Fig3_FMLE_main.pdf"),
-       plot = final_fig,
+ggsave(file.path(out_dir, "Figure_3.pdf"),
+       plot = final,
        device = cairo_pdf,
-       width = 20, height = 14, units = "in",
+       width = 19, height = 13.2, units = "in",
        dpi = 300,
        limitsize = FALSE)
 
-
-
-
+# =========================================================
+# Comparision with baseline method in cross data transfer
+# =========================================================
 
 cmp_all <- df_all %>%
   select(condition, protein, method, Pearson) %>%
@@ -570,7 +542,7 @@ cmp_all <- df_all %>%
     delta_cTPnet   = FMLE - cTPnet
   )
 
-# 2) mean gain per condition (what you did with mean(cmp$...))
+
 mean_gain_by_cond <- cmp_all %>%
   group_by(condition) %>%
   summarise(

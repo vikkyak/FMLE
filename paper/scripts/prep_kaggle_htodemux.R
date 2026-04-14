@@ -1,20 +1,5 @@
-# | Dataset                                 | Description                                                      | Use                                         |
-#   | --------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------- |
-#   | **PBMC (10x Genomics CITE-seq)**        | Human peripheral blood mononuclear cells with RNA + 30–200 ADTs. | Core benchmark — train on RNA, predict ADT.
-
-# FMLE validation setup (extension)
-
-# | Validation Axis                         | Dataset                                               | Purpose                                                                                          |
-# | --------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-# | **(a) scRNA–ADT (standard)**            | PBMC, CBMC, MALT                                      | Show FMLE reduces bias & improves calibration vs scLinear and TotalVI.  
-
 
 # https://www.kaggle.com/datasets/alexandervc/citeseq-scrnaseq-proteins-human-pbmcs-2019
-
-
-#----------------------------------------#
-#  Data preprocessing
-#----------------------------------------#
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -29,10 +14,7 @@ suppressPackageStartupMessages({
   library(FMLE)
 })
 
-files <- c("_config.R", "preprocess_helpers_fmle.R", "preprocess_fmle.R")
-paths <- file.path(here::here(), "paper", "scripts", files)
-stopifnot(all(file.exists(paths)))
-invisible(lapply(paths, source))
+source(file.path(here::here(), "paper", "scripts", "_config.R"))
 
 out_base <- file.path(cfg$out_root, "citeseq_v1")
 out_ctp  <- file.path(cfg$out_root, "ctp")
@@ -131,29 +113,22 @@ stopifnot(identical(colnames(seu[["RNA"]]), colnames(seu[["ADT"]])))
 
 
 # ============================================================
-# 3) preprocess_fmle (this FINALIZES the cell set)
+# 3) preprocess
 # ============================================================
 
-seu_final <- preprocess_fmle(
+seu_final <- preprocess(
   object = seu,
-  annotation_selfCluster  = TRUE,
   remove_doublets = TRUE,
   low_qc_cell_removal = TRUE,
-  integrate_data = FALSE,
   remove_empty_droplets = FALSE,
   resolution = 0.8,
+  do_clustering = FALSE,
   seed = 42,
   return_plots = FALSE,
   print_plots = FALSE,
   species = "Hs"
 )
 
-# seu_final <- scLinear::prepare_data(
-#   seu,
-#   integrate_data          = FALSE,
-#   annotation_selfCluster  = TRUE,
-#   remove_empty_droplets   = FALSE
-# )
 
 stopifnot(identical(colnames(seu_final[["RNA"]]), colnames(seu_final[["ADT"]])))
 
@@ -199,20 +174,20 @@ stopifnot(
 hto_sp <- as(hto_mat, "dgCMatrix")
 stopifnot(!is.null(rownames(hto_sp)), !is.null(colnames(hto_sp)))
 
-# 2) Create a Seurat object with HTO as the ONLY assay (no dummy counts needed)
+#  Create a Seurat object with HTO as the ONLY assay (no dummy counts needed)
 shto <- CreateSeuratObject(counts = hto_sp, assay = "HTO", project = "HTO_only")
 
-# 3) Normalize and demultiplex on the HTO assay
+#  Normalize and demultiplex on the HTO assay
 shto <- NormalizeData(shto, assay = "HTO", normalization.method = "CLR")
 shto <- HTODemux(shto, assay = "HTO", positive.quantile = 0.97)  # tweak 0.95–0.98 if needed
 
 table(shto$HTO_maxID)
 table(shto$HTO_classification.global)
 
-# 4) Extract classifications and winner hashtag per cell
+#  Extract classifications and winner hashtag per cell
 
 
-# 5) Keep only Singlets (recommended for modeling)
+#  Keep only Singlets (recommended for modeling)
 keep_idx <- shto$HTO_classification.global == "Singlet"
 keep_cells <- colnames(shto)[keep_idx]
 
@@ -296,8 +271,5 @@ cat("DONE\n",
 
 
 
-writeLines(capture.output(sessionInfo()),
-           file.path(cfg$out_root, "sessionInfo.txt"))
-saveRDS(cfg, file.path(cfg$out_root, "config_used.rds"))
 
 

@@ -15,7 +15,7 @@ The package supports:
 FMLE models protein abundance as a mixture of regime-specific RNA–protein mappings with soft, input-dependent gating. This allows the model to capture heterogeneous coupling structure that is missed by a single global mapping.
 
 <p align="center">
-  <img src="figures/fmle_overview.jpg" alt="FMLE overview" width="1100">
+  <img src="figures/fmle_overview.png" alt="FMLE overview" width="1100">
 </p>
 
 *Figure 1. FMLE identifies regime-dependent RNA–protein coupling, improves over a single global mapping, and reveals interpretable regime structure across cells.*
@@ -29,7 +29,16 @@ remotes::install_local("FMLE")
 remotes::install_github("vikkyak/FMLE")
 ```
 
+## Python interoperability
 
+If you want to import AnnData (`.h5ad`) objects in R, use `reticulate` in your analysis script, for example:
+
+```r
+library(reticulate)
+use_condaenv("your_env_name", required = TRUE)
+py_config()
+anndata <- import("anndata")
+```
 
 ## Quickstart
 
@@ -202,13 +211,25 @@ Across multiple PBMC datasets, FMLE improves RNA→protein prediction relative t
 
 _Figure_ 2. FMLE achieves stronger per-protein predictive performance across benchmark datasets and wins more frequently than competing methods.
 
+
+## Zero-shot cross-dataset transfer
+
+FMLE preserves regime structure and predictive advantage under zero-shot dataset transfer, supporting the biological reproducibility of the inferred coupling regimes across independent single-cell multimodal datasets.
+
+<p align="center"> <img src="figures/fmle_cross_data_transfer.png" alt="FMLE zero-shot cross-dataset generalization" width="1100"> </p>
+
+_Figure_ 3. FMLE generalizes in a zero-shot cross-dataset setting, preserves structured RNA–protein coupling, and improves unseen target-dataset prediction relative to global and baseline models.
+
+
+
+
 ## Cross-donor generalization
 
 FMLE preserves regime structure and predictive advantage under donor shift, supporting the biological reproducibility of the inferred coupling regimes.
 
-<p align="center"> <img src="figures/fmle_cross_donor.jpg" alt="FMLE cross-donor results" width="1100"> </p>
+<p align="center"> <img src="figures/fmle_cross_donor.png" alt="FMLE cross-donor results" width="1100"> </p>
 
-_Figure_ 3. FMLE regimes generalize across donors, preserve structured RNA–protein coupling, and improve held-out donor prediction relative to global and baseline models.
+_Figure_ 4. FMLE regimes generalize across donors, preserve structured RNA–protein coupling, and improve held-out donor prediction relative to global and baseline models.
 
 ## Vignette
 

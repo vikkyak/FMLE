@@ -1,25 +1,23 @@
-#!/usr/bin/env Rscript
 
 # ============================================================
 # TEA-seq PBMC (GSE158013 / GSM4949911): RNA+ADT benchmark export
-# Produces:
-#   1) seu_final.rds                 (final Seurat object after preprocess_fmle)
-#   2) citeseq_v1/{X.rds,Z.rds,adt_mat.rds,train_cells.rds,test_cells.rds}
-#   3) ctp/{rna_train.csv,rna_test.csv,adt_train.csv,adt_test.csv}  (cells x features)
 # ============================================================
 
 suppressPackageStartupMessages({
+  library(data.table)
   library(Matrix)
   library(Seurat)
+  library(clusterProfiler)
+  library(IRanges)
+  library(purrr)
   library(dplyr)
-  library(reticulate)
-  library(scLinear)
+  library(tidyr)
+  library(readr)
+  library(FMLE)
 })
 
-files <- c("_config.R", "preprocess_helpers_fmle.R", "preprocess_fmle.R")
-paths <- file.path(here::here(), "paper", "scripts", files)
-stopifnot(all(file.exists(paths)))
-invisible(lapply(paths, source))
+source(file.path(here::here(), "paper", "scripts", "_config.R"))
+
 # -----------------------
 # Paths
 # -----------------------
@@ -120,16 +118,15 @@ seu <- subset(seu, cells = keep_cells)
 stopifnot(identical(colnames(seu[["RNA"]]), colnames(seu[["ADT"]])))
 
 # ============================================================
-# 3) preprocess_fmle (this FINALIZES the cell set)
+# 3) preprocess
 # ============================================================
-# ensure reticulate env is set (adjust name if needed)
-seu_final <- preprocess_fmle(
+seu_final <- preprocess(
   object = seu,
   remove_doublets = TRUE,
   low_qc_cell_removal = TRUE,
-  integrate_data = FALSE,
   remove_empty_droplets = FALSE,
   resolution = 0.8,
+  do_clustering = FALSE,
   seed = 42,
   return_plots = FALSE,
   print_plots = FALSE,
@@ -214,14 +211,6 @@ cat("DONE\n",
     "HVGs:", ncol(X), "\n",
     "Saved RDS:", out_base, "\n",
     "Saved cTPnet CSV:", out_ctp, "\n", sep="")
-
-
-
-
-writeLines(capture.output(sessionInfo()),
-           file.path(cfg$out_root, "sessionInfo.txt"))
-saveRDS(cfg, file.path(cfg$out_root, "config_used.rds"))
-
 
 
 

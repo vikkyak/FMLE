@@ -4,3 +4,4 @@
 FMLE.Rcheck/
 .Rhistory
 *.tar.gz
+inst/doc

@@ -1,37 +1,50 @@
 Package: FMLE
 Type: Package
-Title: Fuzzy Mixture of Linear Experts for Single-Cell Protein Abundance Prediction
+Title: Fuzzy mixture of linear experts for regime-aware RNA-to-protein prediction
 Version: 0.1.0
 Authors@R: 
     person("Vikas", "Singh",
            email = "vikkysingh07@gmail.com",
            role = c("aut", "cre"))
-Description: Implements Fuzzy Mixture of Linear Experts (FMLE) for learning
-    mappings from single-cell RNA expression to surface protein abundance,
-    as measured for example in CITE-seq experiments. FMLE combines a fuzzy
-    c-means gating network in a low-dimensional representation (e.g. PCA,
-    embeddings or other latent spaces) with multiple linear experts operating
-    on high-dimensional gene expression features. The model supports both
-    single-protein (single-task) and multi-protein (multi-task) prediction,
-    optional L1 penalization of expert coefficients (lasso plus post-ridge),
-    and returns predictive means together with decomposed uncertainty
-    (aleatoric and parameter). Although implemented in a general form for
-    high-dimensional regression, the primary focus is accurate and interpretable
-    prediction of protein abundance at single-cell resolution across donors,
-    batches and antibody panels.
+Description: Implements Fuzzy Mixture of Linear Experts (FMLE) for
+    regime-aware prediction of surface protein abundance from single-cell
+    transcriptomic features, as measured, for example, in CITE-seq
+    experiments. FMLE models protein abundance as a soft mixture of
+    cell-state-dependent RNA-to-protein mappings with input-dependent
+    gating, allowing RNA--protein coupling to vary across cellular
+    contexts rather than enforcing a single global relationship. The
+    package supports single-protein prediction, cross-validation,
+    uncertainty decomposition, and preprocessing utilities for Seurat-
+    based single-cell workflows. Although implemented in a general
+    regression framework, the primary focus is accurate and interpretable
+    protein prediction, identification of reproducible coupling regimes,
+    and analysis of context-dependent RNA--protein relationships across
+    donors, batches, and transfer settings in single-cell multimodal
+    data.    
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends: 
     R (>= 4.1.0)
-Imports: 
+Imports:
     stats,
+    Matrix,
     glmnet,
-    future.apply
+    future,
+    future.apply,
+    Seurat,
+    SeuratObject,
+    dplyr,
+    ggplot2,
+    scDblFinder,
+    scater,
+    DropletUtils,
+    intrinsicDimension,
+    pals,
+    magrittr
 Suggests: 
     tibble,
-    ggplot2,
     testthat (>= 3.0.0),
     knitr,
     rmarkdown

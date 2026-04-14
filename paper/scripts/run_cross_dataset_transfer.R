@@ -1,13 +1,7 @@
-# ============================================================
+# ====================================================================
 # Cross-dataset transfer (A -> B, B -> A) for FMLE / scLinear / cTPnet
 # HARD VERIFICATION + FIXED ALIGNMENT + FAIR CALIBRATION
-#
-# KEY RULES (enforced here):
-#  1) ONE global protein canonicalization for truth + all preds (no per-method hacks)
-#  2) SAME gene set (genes_common) for FMLE + scLinear + cTPnet
-#  3) FMLE transfer uses SHARED Z learned from A-train PCA basis (comparable)
-#  4) scLinear / cTPnet are calibrated the same way as FMLE scoring scale (A-train tf)
-# ============================================================
+# ====================================================================
 
 suppressPackageStartupMessages({
   library(FMLE)
@@ -26,10 +20,9 @@ suppressPackageStartupMessages({
   library(scLinear)
 })
 
-
-# ---------------------------
+# ============================
 # 0) Utilities: strict checks
-# ---------------------------
+# ============================
 assert_all <- function(cond, msg) if (!isTRUE(cond)) stop(msg, call. = FALSE)
 
 check_ds <- function(D, tag="DS") {
@@ -56,9 +49,9 @@ check_ds <- function(D, tag="DS") {
   invisible(TRUE)
 }
 
-# ---------------------------
+# ============================
 # 1) Load dataset from folder
-# ---------------------------
+# ============================
 load_ds <- function(ds_dir) {
   D <- list(
     train_cells = readRDS(file.path(ds_dir, "train_cells.rds")),
@@ -78,9 +71,9 @@ load_ds <- function(ds_dir) {
   D
 }
 
-# ---------------------------
+# =========================================
 # 2) ONE global protein canonicalization
-# ---------------------------
+# =========================================
 canon_prot_global <- function(x){
   x <- as.character(x)
   x <- sub("\\.TotalSeqB$", "", x)
@@ -91,9 +84,9 @@ canon_prot_global <- function(x){
   x
 }
 
-# ---------------------------
+# ===============================
 # 3) Metrics (same numeric scale)
-# ---------------------------
+# ===============================
 calc_metrics <- function(yt, yp) {
   ok <- is.finite(yt) & is.finite(yp)
   yt <- yt[ok]; yp <- yp[ok]
@@ -109,10 +102,10 @@ calc_metrics <- function(yt, yp) {
   )
 }
 
-# ---------------------------
+# ===================================================
 # 4) Shared Z from A-train PCA basis (transfer-valid)
-# ---------------------------
-build_shared_Z_from_Atrain <- function(DS, genes_common, k = 35, seed = 1) {
+# ===================================================
+build_shared_Z_from_Atrain <- function(DS, genes_common, k = 20, seed = 1) {
   stopifnot(all(c("A","B") %in% names(DS)))
   stopifnot(!is.null(DS$A$train_cells), !is.null(DS$B$test_cells))
   
@@ -143,9 +136,9 @@ build_shared_Z_from_Atrain <- function(DS, genes_common, k = 35, seed = 1) {
   DS
 }
 
-# ---------------------------
+# =====================================================
 # 5) FMLE transfer evaluation (with affine calibration)
-# ---------------------------
+# =====================================================
 eval_transfer_fmle_cal <- function(A, B, best_tbl_A, q = 0.995,
                                    zscore_Z = TRUE, seed = 1) {
   
@@ -206,9 +199,9 @@ eval_transfer_fmle_cal <- function(A, B, best_tbl_A, q = 0.995,
   dplyr::bind_rows(out)
 }
 
-# ---------------------------
+# ==========================================================
 # 6) Generic calibrated transfer eval for scLinear / cTPnet
-# ---------------------------
+# ==========================================================
 eval_transfer_calibrated <- function(A, B, yhatA_train_raw, yhatB_test_raw,
                                      method_name, q=0.995) {
   
@@ -253,12 +246,16 @@ eval_transfer_calibrated <- function(A, B, yhatA_train_raw, yhatB_test_raw,
   bind_rows(out)
 }
 
-# ============================================================
+# =================================================
 # 7) RUN: load DS, enforce ONE naming + SAME genes
-# ============================================================
-base_1 <- file.path(cfg$out_root, "benchmarks_1")
-base_2 <- file.path(cfg$out_root, "benchmarks_2")
-base_3 <- file.path(cfg$out_root, "benchmarks_3")
+# =================================================
+base_1 <- file.path(cfg$out_root, "benchmarks_trasnfer_1")
+base_2 <- file.path(cfg$out_root, "benchmarks_trasnfer_2")
+base_3 <- file.path(cfg$out_root, "benchmarks_trasnfer_3")
+#  in case of PBMC
+base <- file.path(cfg$out_root, "transfer_preds_PBMC")
+#  in case of BMMC
+base <- file.path(cfg$out_root, "transfer_preds_BMMC")
 
 ds_paths <- list(
   A = file.path(base_1, "citeseq_v1"),
@@ -280,55 +277,53 @@ rownames(DS$C$adt_mat) <- canon_prot_global(rownames(DS$C$adt_mat))
 DS$A$X_full <- t(as.matrix(GetAssayData(DS$A$seu_prep, assay="RNA", layer="data")))
 DS$B$X_full <- t(as.matrix(GetAssayData(DS$B$seu_prep, assay="RNA", layer="data")))
 DS$C$X_full <- t(as.matrix(GetAssayData(DS$C$seu_prep, assay="RNA", layer="data")))
+# # ================================================================================
+# # this is used to get common genes in all datatset for transfer
+# genes_A <- colnames(DS$A$X_full)
+# genes_B <- colnames(DS$B$X_full)
+# genes_C <- colnames(DS$C$X_full)
+# genes_ABC <- Reduce(intersect, list(genes_A, genes_B, genes_C))
+# length(genes_ABC)
+# 
+# n_pool <- 4000
+# hvgA <- VariableFeatures(FindVariableFeatures(DS$A$seu_prep, assay="RNA", nfeatures=n_pool, verbose=FALSE))
+# hvgB <- VariableFeatures(FindVariableFeatures(DS$B$seu_prep, assay="RNA", nfeatures=n_pool, verbose=FALSE))
+# hvgC <- VariableFeatures(FindVariableFeatures(DS$C$seu_prep, assay="RNA", nfeatures=n_pool, verbose=FALSE))
+# 
+# rankA <- setNames(seq_along(hvgA), hvgA)
+# pool <- Reduce(union, list(hvgA, hvgB, hvgC))
+# pool <- intersect(pool, genes_ABC)
+# pool <- pool[order(ifelse(pool %in% names(rankA), rankA[pool], 1e9))]
+# 
+# genes_use2 <- head(pool, 2000)
+# stopifnot(length(genes_use2) == 2000)
+# 
+# 
+# cat("A genes:", length(genes_A),
+#     "B genes:", length(genes_B),
+#     "C genes:", length(genes_C),
+#     "genes_use2:", length(genes_use2), "\n")
+# 
+# DS$A$X <- DS$A$X_full[, genes_use2, drop=FALSE]
+# DS$B$X <- DS$B$X_full[, genes_use2, drop=FALSE]
+# DS$C$X <- DS$C$X_full[, genes_use2, drop=FALSE]
+# 
+# stopifnot(
+#   identical(colnames(DS$A$X), genes_use2),
+#   identical(colnames(DS$B$X), genes_use2),
+#   identical(colnames(DS$C$X), genes_use2)
+# )
+# 
+# genes_common <- genes_use2
+# 
+# saveRDS(genes_common, file.path("~/Desktop/FMLE/transfer_preds", "gene_panel_2000.rds"))
+# 
+# write.csv(data.frame(gene = genes_common),
+#           "~/Desktop/FMLE/transfer_preds/gene_panel_2000.csv",
+#           row.names = FALSE)
+# # ================================================================================
 
-genes_A <- colnames(DS$A$X_full)
-genes_B <- colnames(DS$B$X_full)
-genes_C <- colnames(DS$C$X_full)
-genes_ABC <- Reduce(intersect, list(genes_A, genes_B, genes_C))
-length(genes_ABC)
-
-n_pool <- 4000
-hvgA <- VariableFeatures(FindVariableFeatures(DS$A$seu_prep, assay="RNA", nfeatures=n_pool, verbose=FALSE))
-hvgB <- VariableFeatures(FindVariableFeatures(DS$B$seu_prep, assay="RNA", nfeatures=n_pool, verbose=FALSE))
-hvgC <- VariableFeatures(FindVariableFeatures(DS$C$seu_prep, assay="RNA", nfeatures=n_pool, verbose=FALSE))
-
-rankA <- setNames(seq_along(hvgA), hvgA)
-pool <- Reduce(union, list(hvgA, hvgB, hvgC))
-pool <- intersect(pool, genes_ABC)
-pool <- pool[order(ifelse(pool %in% names(rankA), rankA[pool], 1e9))]
-
-genes_use2 <- head(pool, 2000)
-stopifnot(length(genes_use2) == 2000)
-
-
-cat("A genes:", length(genes_A),
-    "B genes:", length(genes_B),
-    "C genes:", length(genes_C),
-    "genes_use2:", length(genes_use2), "\n")
-
-DS$A$X <- DS$A$X_full[, genes_use2, drop=FALSE]
-DS$B$X <- DS$B$X_full[, genes_use2, drop=FALSE]
-DS$C$X <- DS$C$X_full[, genes_use2, drop=FALSE]
-
-stopifnot(
-  identical(colnames(DS$A$X), genes_use2),
-  identical(colnames(DS$B$X), genes_use2),
-  identical(colnames(DS$C$X), genes_use2)
-)
-
-genes_common <- genes_use2
-
-saveRDS(genes_common, file.path("~/Desktop/FMLE/transfer_preds", "gene_panel_2000.rds"))
-
-write.csv(data.frame(gene = genes_common),
-          "~/Desktop/FMLE/transfer_preds/gene_panel_2000.csv",
-          row.names = FALSE)
-
-panel <- read.csv("~/Desktop/FMLE/transfer_preds/gene_panel_2000.csv",
-               header = TRUE, stringsAsFactors = FALSE)
-
-setequal(genes_common, panel$gene)  # confirm they’re identical sets
-identical(genes_common, panel$gene) # in the same order
+genes_common <- readRDS(file.path(base, "gene_panel_2000.rds")) 
 
 # ============================================================
 # 8) FMLE (needs best config per direction)
@@ -349,13 +344,8 @@ for (nm in c("A","B","C")) {
   best_cfg[[nm]] <- best_cfg[[nm]] %>% dplyr::distinct(protein, .keep_all=TRUE)
 }
 
-kA <- max(30, max(best_cfg$A$R, na.rm=TRUE) * 5)
-kB <- max(30, max(best_cfg$B$R, na.rm=TRUE) * 5)
-kC <- max(30, max(best_cfg$C$R, na.rm=TRUE) * 5)
-stopifnot(ncol(DS_AB$A$Z) == kA, ncol(DS_AB$B$Z) == kA)
-stopifnot(ncol(DS_BA$A$Z) == kB, ncol(DS_BA$B$Z) == kB)
-stopifnot(ncol(DS_CA$A$Z) == kC, ncol(DS_CA$B$Z) == kC)
-k_c <- min(kA, kB, kC)
+# Gate
+k_c <- 20
 
 DS_AB <- build_shared_Z_from_Atrain(list(A=DS$A, B=DS$B), genes_common, k = k_c , seed=1)
 DS_AC <- build_shared_Z_from_Atrain(list(A=DS$A, B=DS$C), genes_common, k = k_c, seed=1)
@@ -386,7 +376,6 @@ stopifnot(identical(rownames(DS_CB$B$X), rownames(DS$B$X)))
 
 stopifnot(nrow(DS_AB$A$Z) == nrow(DS_AB$A$X))
 stopifnot(nrow(DS_AB$B$Z) == nrow(DS_AB$B$X))
-stopifnot(ncol(DS_AB$A$Z) == kAB, ncol(DS_AB$B$Z) == kAB)
 stopifnot(length(intersect(rownames(DS_AB$A$X), rownames(DS_AB$B$X))) == 0)
 
 stopifnot(identical(colnames(DS$A$X), genes_common))
@@ -424,10 +413,10 @@ res_fmle_CB <- eval_transfer_fmle_cal(DS_CB$A, DS_CB$B, best_cfg$C, seed=1) %>%
 res_fmle_CB <- dplyr::bind_rows(res_fmle_CB)
 readr::write_csv(res_fmle_CB, file.path(ctpCB_dir, "res_fmle_CB.csv"))
 
-# ============================================================
+# =======================================================================
 # 9) scLinear (train on source train, predict source train + target test)
 #    IMPORTANT: subset RNA genes to genes_common for fairness.
-# ============================================================
+# =======================================================================
 get_sclinear_transfer_preds <- function(seu_src, seu_tgt, train_cells_src, test_cells_tgt, genes_common) {
   
   assert_all(all(train_cells_src %in% colnames(seu_src)), "scLinear: some train_cells not in source seu")
@@ -467,7 +456,6 @@ get_sclinear_transfer_preds <- function(seu_src, seu_tgt, train_cells_src, test_
     pred_tgt_test_raw  = pred_tgt_test_raw
   )
 }
-
 
 run_scl_transfer <- function(src, tgt, src_tag, tgt_tag){
   
@@ -513,7 +501,6 @@ readr::write_csv(res_scl_CA, file.path(ctpCA_dir, "res_scl_CA.csv"))
 res_scl_CB <- run_scl_transfer(DS$C, DS$B, "C","B")
 res_scl_CB <- dplyr::bind_rows(res_scl_CB)
 readr::write_csv(res_scl_CB, file.path(ctpCB_dir, "res_scl_CB.csv"))
-
 
 # ============================================================
 #  cTPnet 
@@ -647,7 +634,6 @@ wilcox_transfer <- function(df, tr, te) {
 
 
 
-
 pairs <- unique(df_all[, c("train_ds","test_ds")])
 
 wilcox_results <- purrr::map2_df(
@@ -666,8 +652,6 @@ df_wide <- df_all %>%
 
 wilcox.test(df_wide$FMLE, df_wide$cTPnet, paired = TRUE, exact = FALSE)
 wilcox.test(df_wide$FMLE, df_wide$scLinear, paired = TRUE, exact = FALSE)
-
-
 
 
 writeLines(capture.output(sessionInfo()),

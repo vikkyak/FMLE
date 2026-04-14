@@ -83,76 +83,14 @@ celltype_regime_comp <- function(alpha, seu, cell_ids, celltype_col="cell_type",
   out
 }
 
-#========================================================
-# PANEL A 
-#========================================================
-
-pA <- ggplot() +
-  coord_cartesian(xlim=c(0,1), ylim=c(0,1), expand=FALSE) +
-  
-  # Global row
-  annotate("label", x=0.10, y=0.82, label="RNA", label.size=0.3, size=3.5) +
-  annotate("label", x=0.88, y=0.82, label="Protein", label.size=0.3, size=3.5) +
-  annotate("text",  x=0.50, y=0.92, label="Global: single mapping\nP = f(X)", size=3.5,hjust = 0.5) +
-  geom_segment(aes(x=0.20, y=0.82, xend=0.75, yend=0.82),
-               arrow=arrow(length=unit(0.02,"npc")), linewidth=0.8) +
-  
-  # FMLE row
-  annotate("text", x=0.50, y=0.70, label="FMLE: mixture of coupling regimes", size=3.5) +
-  annotate("label", x=0.10, y=0.48, label="RNA", label.size=0.3, size=3.5) +
-  annotate("label", x=0.88, y=0.48, label="Protein", label.size=0.3, size=3.5) +
-  
-  geom_segment(aes(x=0.18, y=0.48, xend=0.33, yend=0.48),
-               arrow=arrow(length=unit(0.02,"npc")), linewidth=0.8) +
-  annotate("label", x=0.40, y=0.48, label=expression(alpha(X)),
-           label.size=0.3, size=3.6) +
-  
-  geom_segment(aes(x=0.47, y=0.48, xend=0.60, yend=0.56),
-               arrow=arrow(length=unit(0.02,"npc")), linewidth=0.8) +
-  geom_segment(aes(x=0.47, y=0.48, xend=0.60, yend=0.40),
-               arrow=arrow(length=unit(0.02,"npc")), linewidth=0.8) +
-  annotate("text", x = 0.50, y = 0.60,
-           label = expression(plain(regime)[1] * ":  " * f[1](X)),
-           hjust = 0, size = 3.6) +
-  annotate("segment",
-           x = 0.60, xend = 0.60,
-           y = 0.54, yend = 0.42,
-           linetype = "dotted", linewidth = 0.5) +
-  annotate("text", x = 0.50, y = 0.36,
-           label = expression(plain(regime)[R] * ":  " * f[R](X)),
-           hjust = 0, size = 3.6)+
-  
-  geom_segment(aes(x=0.62, y=0.56, xend=0.77, yend=0.48),
-               arrow=arrow(length=unit(0.02,"npc")), linewidth=0.8) +
-  geom_segment(aes(x=0.62, y=0.40, xend=0.77, yend=0.48),
-               arrow=arrow(length=unit(0.02,"npc")), linewidth=0.8) +
-
-  annotate("text", x = 0.50, y = 0.20,
-           label = expression(hat(P)(X) == sum(alpha[r](X) %.% f[r](X), r == 1, R)),
-           size = 3.4)
-
-
-pA <- pA +
-  theme(
-    text = element_text(size = 8),
-    axis.title = element_blank(),
-    axis.text  = element_blank(),
-    axis.ticks = element_blank(),
-    axis.line  = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    plot.title = element_text(hjust = 0.5, face = "bold")
-  ) +
-  labs(title = "Global vs FMLE mapping")
-
 
 #========================================================
 # Load FMLE object (TEST-only alpha)
 #========================================================
-# PBMC Kaggle
-prot <- "HLA.DR"
+# BMMC CITE-seq dataset
+prot <- "HLA-DR"
 rna_gene <- "HLA-DRA"
-bench <- 1  # set 1, 2, or 3
+bench <- 1  # set 1,  or 2
 ds <- "citeseq_v1"
 base <- file.path(cfg$out_root, sprintf("benchmarks_%d", bench))
 ds_dir <- file.path(base, ds)
@@ -201,6 +139,7 @@ df <- df[is.finite(df$rna) & is.finite(df$y) & is.finite(df$yhat), ]
 stopifnot(!anyNA(df$celltype))
 
 H <- -rowSums(alpha_test * log(pmax(alpha_test, 1e-12))) / log(ncol(alpha_test))
+
 entropy_error_stats(H, df$y, df$yha)
 
 fit_ct <- lm(y ~ rna * celltype, data = df)
@@ -227,11 +166,12 @@ p_txt <- if (p_int < 2.2e-16) {
   paste0("Interaction p = ", format(signif(p_int, 3), scientific = TRUE))
 }
 
+
 #========================================================
-# PANEL B — Regime-dependent RNA–protein coupling
+# PANEL A — Regime-dependent RNA–protein coupling
 #========================================================
 
-pB <- ggplot(df, aes(rna, y, color = hard)) +
+pA <- ggplot(df, aes(rna, y, color = hard)) +
   geom_point(alpha = 0.45, size = 0.7) +
   geom_smooth(method = "lm", se = TRUE, linewidth = 0.9) +
   theme_classic(base_size = 8) +
@@ -247,12 +187,12 @@ pB <- ggplot(df, aes(rna, y, color = hard)) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 #========================================================
-# PANEL C — global failure 
+# PANEL B — global failure 
 #========================================================
 m_global <- lm(y ~ rna, data=df)
 df$resid_global <- df$y - predict(m_global, newdata=df)
 
-pC <- ggplot(df, aes(rna, resid_global, color = hard)) +
+pB <- ggplot(df, aes(rna, resid_global, color = hard)) +
   geom_point(alpha = 0.45, size = 0.7) +
   geom_hline(yintercept = 0, linetype = 2, linewidth = 0.7) +
   theme_classic(base_size = 8) +
@@ -266,7 +206,7 @@ pC <- ggplot(df, aes(rna, resid_global, color = hard)) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 #===============================================================
-# PANEL D E F and G — Global, FMLE, cTPnet and scLiear  vs truth 
+# PANEL C D E and F — Global, FMLE, cTPnet and scLiear  vs truth 
 #===============================================================
 # global prediction from same model (optional overlay)
 df$yhat_global <- predict(m_global, newdata=df)
@@ -347,8 +287,8 @@ make_panel_pred <- function(m){
     base_theme
 }
 
-pD <- make_panel_pred("Global")
-pE <- make_panel_pred("FMLE")
+pC <- make_panel_pred("Global")
+pD <- make_panel_pred("FMLE")
 p_ctpnet   <- make_panel_pred("cTPnet")
 p_sclinear <- make_panel_pred("scLinear")
 
@@ -430,7 +370,7 @@ stopifnot(nrow(plot_df_te) == length(test_cells))
 stopifnot(!anyNA(plot_df_te$regime), !anyNA(plot_df_te$entropy))
 
 #========================================================
-# PANEL H
+# PANEL G
 #========================================================
 p1 <- ggplot(plot_df_te, aes(UMAP_1, UMAP_2, color = regime)) +
   geom_point(size = 0.25, alpha = 0.7) +
@@ -438,7 +378,7 @@ p1 <- ggplot(plot_df_te, aes(UMAP_1, UMAP_2, color = regime)) +
   labs(title = "Test data UMAP: regime (argmax α)", color = "Regime")
 
 #========================================================
-# PANEL I
+# PANEL H
 #========================================================
 
 p2 <- ggplot(plot_df_te, aes(UMAP_1, UMAP_2, color = entropy)) +
@@ -468,7 +408,6 @@ comp <- comp_cells %>%
   mutate(frac = n/sum(n)) %>%
   ungroup()
 
-
 # JSD on matched regime support
 regs <- sort(unique(comp$regime))
 pvec <- comp %>% filter(donor=="train_data") %>%
@@ -484,7 +423,7 @@ cat(sprintf("JSD(train,test)=%.6g\n", JSD))
 
 min_n <- 100
 ct_col <- "cell_type" # for kaggle datasets
-   
+
 comp_tr_ct <- celltype_regime_comp(alpha_tr, seu_prep, cell_ids=train_cells,
                                    celltype_col=ct_col, min_n=min_n, split_label="train")
 comp_te_ct <- celltype_regime_comp(alpha_te, seu_prep, cell_ids=test_cells,
@@ -496,9 +435,8 @@ p4_df <- comp_all_ct %>%
   droplevels()
 
 #========================================================
-# PANEL J
+# PANEL M
 #========================================================
-
 
 p4 <- ggplot(p4_df, aes(x = celltype, y = frac, fill = regime)) +
   geom_col(width = 0.85) +
@@ -533,11 +471,12 @@ cat("\nTEST: chisq + Cramer's V\n")
 print(chisq.test(xt_te, simulate.p.value = TRUE, B = 20000))
 print(cramerV(xt_te))
 
+
 # ================================================
-#  lineage cells and pathways
+#  PANEL I,  UMAP within lineage cells and pathways
 # ================================================
 
-lineage_use = "B"  # "B",and "Monocyte" for PBMC HLA-DR
+lineage_use <- "CD16+ Mono"  
 ct_col <- "cell_type"
 
 lineages_to_test <- sort(unique(seu_prep@meta.data[[ct_col]]))
@@ -598,9 +537,6 @@ top_re_te
 hallmark_concordant %>% select(Description, NES_tr, padj_tr, NES_te, padj_te) %>% head(20)
 reactome_concordant %>% select(Description, NES_tr, padj_tr, NES_te, padj_te) %>% head(20)
 
-# ================================================
-# PANEL K,  UMAP within lineage cells
-# ================================================
 
 meta <- seu_prep@meta.data
 mono_cells <- intersect(
@@ -631,84 +567,82 @@ mono_df <- data.frame(
   stringsAsFactors = FALSE
 )
 
-lims <- quantile(mono_df$score, c(0.02, 0.98), na.rm = TRUE)
-
 n_label <- data.frame(
   x     = Inf,
   y     = Inf,
   label = paste0("n = ", format(nrow(mono_df), big.mark = ","))
 )
-p3_left <- ggplot() +
-  geom_point(
-    data  = mono_df,
-    aes(UMAP_1, UMAP_2, color = score),
-    size  = 0.6,         
-    alpha = 0.7          
-  ) +
+m <- quantile(abs(mono_df$score), 0.98, na.rm = TRUE)
+lims <- c(-m, m)
+
+xr <- quantile(mono_df$UMAP_1, c(0.01, 0.99), na.rm = TRUE)
+yr <- quantile(mono_df$UMAP_2, c(0.01, 0.99), na.rm = TRUE)
+
+p3_left <- ggplot(mono_df, aes(UMAP_1, UMAP_2, color = score)) +
+  geom_point(size = 1, alpha = 1) +
   geom_text(
-    data         = n_label,
-    aes(x = x, y = y, label = label),
-    inherit.aes  = FALSE,
-    hjust        = 1.5,
-    vjust        = 1.5,
-    size         = 3.5,
-    color        = "black",
-    fontface     = "bold"
-  ) +
-  scale_color_gradientn(
-    colors = c("#FEE0D2", "#FC9272", "#DE2D26", "#99000D"),
-    limits = lims, oob = scales::squish,
-    name   = "FMLE\nscore",
-    guide  = guide_colorbar(barwidth = 0.5, barheight = 3)
+    data = n_label,
+    aes(x = Inf, y = Inf, label = label),
+    inherit.aes = FALSE,
+    hjust = 1.40, vjust = 1.50,
+    size = 3.5, color = "black", fontface = "bold"
+  )+
+  scale_color_gradient2(
+    low = "#2166AC",
+    mid = "#EAEAEA",
+    high = "#B2182B",
+    midpoint = 0,
+    limits = lims,
+    oob = scales::squish,
+    name = "FMLE\nscore"
   ) +
   coord_cartesian(
-    xlim = c(-2.0, 4.5),
-    ylim = c(9.0, 13.5),
-    expand = FALSE
+    xlim = xr + c(-0.3, 0.2),
+    ylim = yr + c(-0.3, 0.2)
   ) +
   theme_classic(base_size = 8) +
   labs(
-    title = "B cells:\nantigen-presentation-associated axis",
-    subtitle = "PBMC, test cells",
+    title = "CD16\u207a monocytes:\nTLR/NF\u03baB-associated axis",
+    subtitle = "BMMC, test cells",
     x = "UMAP 1", y = "UMAP 2"
   ) +
   theme(
-    plot.title      = element_text(face = "bold"),
+    plot.title = element_text(face = "bold"),
     legend.position = "right",
-    legend.title    = element_text(size = 8),
-    legend.text     = element_text(size = 8),
-    plot.margin     = margin(3, 3, 3, 3)
+    legend.title = element_text(size = 8),
+    legend.text  = element_text(size = 8),
+    plot.margin = margin(3, 3, 3, 3)
   )
-
-
 p3_left
 
+# ================================================
+# PANEL J,  Pathway
+# ================================================
 
-# ================================================
-# PANEL L,  # Pathway
-# ================================================
-pathway_df_B <- bind_rows(
+pathway_df_mono <- bind_rows(
   hallmark_concordant %>%
-    filter(ID %in% c(
-      "HALLMARK_ALLOGRAFT_REJECTION",
-      "HALLMARK_INTERFERON_GAMMA_RESPONSE",
-      "HALLMARK_MYC_TARGETS_V1"
-    )) %>%
+    filter(ID == "HALLMARK_TNFA_SIGNALING_VIA_NFKB") %>%
     transmute(
-      pathway = case_when(
-        ID == "HALLMARK_ALLOGRAFT_REJECTION"       ~ "Allograft rejection",
-        ID == "HALLMARK_INTERFERON_GAMMA_RESPONSE" ~ "IFN-\u03b3 response",
-        ID == "HALLMARK_MYC_TARGETS_V1"            ~ "MYC targets"
-      ),
+      pathway = "Hallmark TNF/NF\u03baB",
       NES     = NES_te,
       padj    = padj_te,
       fdr_lab = sprintf("FDR %.1e", padj_te)
     ),
   
   reactome_concordant %>%
-    filter(ID == "REACTOME_ADAPTIVE_IMMUNE_SYSTEM") %>%
+    filter(ID %in% c(
+      "REACTOME_TOLL_LIKE_RECEPTOR_CASCADES",
+      "REACTOME_TOLL_LIKE_RECEPTOR_TLR1_TLR2_CASCADE",
+      "REACTOME_MYD88_INDEPENDENT_TLR4_CASCADE",
+      "REACTOME_TOLL_LIKE_RECEPTOR_9_TLR9_CASCADE"
+    )) %>%
     transmute(
-      pathway = "Adaptive immune system",
+      pathway = case_when(
+        ID == "REACTOME_TOLL_LIKE_RECEPTOR_CASCADES" ~ "TLR cascades",
+        ID == "REACTOME_TOLL_LIKE_RECEPTOR_TLR1_TLR2_CASCADE" ~ "TLR1/TLR2 cascade",
+        ID == "REACTOME_MYD88_INDEPENDENT_TLR4_CASCADE" ~ "TLR4 cascade",
+        ID == "REACTOME_TOLL_LIKE_RECEPTOR_9_TLR9_CASCADE" ~ "TLR9 cascade"
+      ),
       NES     = NES_te,
       padj    = padj_te,
       fdr_lab = sprintf("FDR %.1e", padj_te)
@@ -718,10 +652,10 @@ pathway_df_B <- bind_rows(
   mutate(pathway = factor(pathway, levels = pathway))
 
 
-xmin <- min(pathway_df_B$NES, na.rm = TRUE)
-xmax <- max(pathway_df_B$NES, na.rm = TRUE)
+xmin <- min(pathway_df_mono$NES, na.rm = TRUE)
+xmax <- max(pathway_df_mono$NES, na.rm = TRUE)
 
-p3_right_B <- ggplot(pathway_df_B, aes(x = NES, y = pathway)) +
+p3_right_mono <- ggplot(pathway_df_mono, aes(x = NES, y = pathway)) +
   geom_col(
     aes(fill = NES > 0),
     width = 0.65,
@@ -742,15 +676,243 @@ p3_right_B <- ggplot(pathway_df_B, aes(x = NES, y = pathway)) +
   ) +
   geom_vline(xintercept = 0, linewidth = 0.3, color = "grey40") +
   coord_cartesian(
-    xlim = c(xmin + 0.1, xmax - 0.5),
+    xlim = c(xmin - 1.71, xmax + 0.09),
     clip = "off"
   ) +
   theme_classic(base_size = 8) +
   labs(
-    title = "Reproducible B-cell antigen-presentation\nand immune pathways",
+    title    = "Reproducible CD16\u207a monocyte \ninnate-immune signaling pathways",
     subtitle = "Concordant in train and test; bars show test NES",
     x        = "NES",
     y        = NULL
+  ) +
+  theme(
+    plot.title  = element_text(face = "bold"),
+    axis.text.y = element_text(size = 8),
+    plot.margin = margin(5.5, 35, 5.5, 5.5)
+  )
+
+
+p3_right_mono
+
+# ==================================================
+# PANEL K,  UMAP within lineage cells and pathways
+# ==================================================
+
+lineage_use <- "Transitional B" 
+ct_col <- "cell_type"
+
+res_nk <- lineage_stats(
+  seu_prep = seu_prep,
+  alpha_tr = alpha_tr,
+  alpha_te = alpha_te,
+  train_cells = train_cells,
+  test_cells = test_cells,
+  ct_col = ct_col,
+  lineage = lineage_use,
+  score_regimes = NULL,  
+  assay = "RNA", 
+  layer = "data",
+  min_cells = 200
+)
+
+res_nk$de_tr$summary
+res_nk$de_te$summary
+res_nk$hard_repro
+
+res_nk$assoc_tr$summary
+res_nk$assoc_te$summary
+res_nk$cont_repro
+
+head(res_nk$de_te$res, 20)
+head(res_nk$assoc_te$assoc, 20)
+
+res_mono <- res_nk   # because your current object holds Monocyte results
+
+rank_te <- make_ranked_list(res_mono$assoc_te$assoc)
+rank_tr <- make_ranked_list(res_mono$assoc_tr$assoc)
+
+gsea_h_te  <- run_gsea_msig(rank_te, category = "H")
+gsea_h_tr  <- run_gsea_msig(rank_tr, category = "H")
+
+gsea_re_te <- run_gsea_reactome(rank_te)
+gsea_re_tr <- run_gsea_reactome(rank_tr)
+
+# top pathways
+top_h_te  <- top_gsea_terms(gsea_h_te, 15)
+
+top_h_tr  <- top_gsea_terms(gsea_h_tr, 15)
+
+top_re_te <- top_gsea_terms(gsea_re_te, 15)
+top_re_tr <- top_gsea_terms(gsea_re_tr, 15)
+
+# concordant train-test pathways
+hallmark_concordant <- concordant_gsea(gsea_h_tr, gsea_h_te, padj_cut = 0.05)
+reactome_concordant <- concordant_gsea(gsea_re_tr, gsea_re_te, padj_cut = 0.05)
+
+# inspect
+top_h_te
+top_re_te
+hallmark_concordant %>% select(Description, NES_tr, padj_tr, NES_te, padj_te) %>% head(20)
+reactome_concordant %>% select(Description, NES_tr, padj_tr, NES_te, padj_te) %>% head(20)
+
+meta <- seu_prep@meta.data
+mono_cells <- intersect(
+  test_cells,
+  colnames(seu_prep)[meta[[ct_col]] == lineage_use]
+)
+
+A_mono <- as.matrix(alpha_te[mono_cells, , drop = FALSE])
+
+hard_mono <- colnames(A_mono)[max.col(A_mono, ties.method = "first")]
+tab_mono  <- sort(table(hard_mono), decreasing = TRUE)
+score_regimes <- names(tab_mono)[1:2]
+
+A2 <- A_mono[, score_regimes, drop = FALSE]
+A2 <- A2[rowSums(A2) > 0, , drop = FALSE]
+A2 <- A2 / rowSums(A2)
+
+mono_score <- A2[, 1] - A2[, 2]
+names(mono_score) <- rownames(A2)
+
+umap_mono <- Embeddings(seu_prep, "umap")[names(mono_score), , drop = FALSE]
+
+mono_df <- data.frame(
+  cell   = names(mono_score),
+  UMAP_1 = umap_mono[, 1],
+  UMAP_2 = umap_mono[, 2],
+  score  = mono_score,
+  stringsAsFactors = FALSE
+)
+
+n_label <- data.frame(
+  x     = Inf,
+  y     = Inf,
+  label = paste0("n = ", format(nrow(mono_df), big.mark = ","))
+)
+lims <- quantile(mono_df$score, c(0.02, 0.98), na.rm = TRUE)
+
+xr <- quantile(mono_df$UMAP_1, c(0.01, 0.99), na.rm = TRUE)
+yr <- quantile(mono_df$UMAP_2, c(0.01, 0.99), na.rm = TRUE)
+
+p3_left_B <- ggplot(mono_df, aes(UMAP_1, UMAP_2, color = score)) +
+  geom_point(size = 1, alpha = 1) +
+  geom_text(
+    data = n_label,
+    aes(x = Inf, y = Inf, label = label),
+    inherit.aes = FALSE,
+    hjust = 1.40, vjust = 2.0,
+    size = 3.5, color = "black", fontface = "bold"
+  )+
+  scale_color_gradient2(
+    low = "#2166AC",
+    mid = "#EAEAEA",
+    high = "#B2182B",
+    midpoint = 0,
+    limits = lims,
+    oob = scales::squish,
+    name = "FMLE\nscore"
+  ) +
+  coord_cartesian(
+    xlim = xr + c(-0.4, 0.4),
+    ylim = yr + c(-0.4, 0.4)
+  ) +
+  theme_classic(base_size = 8) +
+  labs(
+    title = "Transitional B cells:\nantigen-presentation-associated axis",
+    subtitle = "BMMC, test cells",
+    x = "UMAP 1", y = "UMAP 2"
+  ) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "right",
+    legend.title = element_text(size = 8),
+    legend.text  = element_text(size = 8),
+    plot.margin = margin(3, 3, 3, 3)
+  )
+p3_left_B
+
+# ================================================
+# PANEL L,  Pathway
+# ================================================
+
+pathway_df_TB <- bind_rows(
+  hallmark_concordant %>%
+    filter(ID %in% c(
+      "HALLMARK_TNFA_SIGNALING_VIA_NFKB",
+      "HALLMARK_MYC_TARGETS_V1"
+    )) %>%
+    transmute(
+      pathway = case_when(
+        ID == "HALLMARK_TNFA_SIGNALING_VIA_NFKB" ~ "TNFα/NF-κB signaling",
+        ID == "HALLMARK_MYC_TARGETS_V1" ~ "MYC targets"
+      ),
+      NES     = NES_te,
+      padj    = padj_te,
+      fdr_lab = sprintf("FDR %.1e", padj_te)
+    ),
+  
+  reactome_concordant %>%
+    filter(ID %in% c(
+      "REACTOME_ADAPTIVE_IMMUNE_SYSTEM",
+      "REACTOME_MHC_CLASS_II_ANTIGEN_PRESENTATION",
+      "REACTOME_TRANSLATION",
+      "REACTOME_RRNA_PROCESSING",
+      "REACTOME_METABOLISM_OF_AMINO_ACIDS_AND_DERIVATIVES",
+      "REACTOME_NONSENSE_MEDIATED_DECAY_NMD",
+      "REACTOME_CELLULAR_RESPONSE_TO_STARVATION"
+    )) %>%
+    transmute(
+      pathway = case_when(
+        ID == "REACTOME_ADAPTIVE_IMMUNE_SYSTEM" ~ "Adaptive immune system",
+        ID == "REACTOME_MHC_CLASS_II_ANTIGEN_PRESENTATION" ~ "MHC-II antigen presentation",
+        ID == "REACTOME_TRANSLATION" ~ "Translation",
+        ID == "REACTOME_RRNA_PROCESSING" ~ "rRNA processing",
+        ID == "REACTOME_METABOLISM_OF_AMINO_ACIDS_AND_DERIVATIVES" ~ "Amino acid metabolism",
+        ID == "REACTOME_NONSENSE_MEDIATED_DECAY_NMD" ~ "NMD",
+        ID == "REACTOME_CELLULAR_RESPONSE_TO_STARVATION" ~ "Starvation response"
+      ),
+      NES     = NES_te,
+      padj    = padj_te,
+      fdr_lab = sprintf("FDR %.1e", padj_te)
+    )
+) %>%
+  arrange(NES) %>%
+  mutate(pathway = factor(pathway, levels = pathway))
+
+xmin <- min(pathway_df_TB$NES, na.rm = TRUE)
+xmax <- max(pathway_df_TB$NES, na.rm = TRUE)
+
+p_right_TB <- ggplot(pathway_df_TB, aes(x = NES, y = pathway)) +
+  geom_col(
+    aes(fill = NES > 0),
+    width = 0.65,
+    show.legend = FALSE
+  ) +
+  scale_fill_manual(
+    values = c("TRUE" = "#4393C3", "FALSE" = "#D6604D")
+  ) +
+  geom_text(
+    aes(
+      label = fdr_lab,
+      x = NES / 2
+    ),
+    hjust = 0.5,
+    size = 2.8,
+    color = "white",
+    fontface = "bold"
+  ) +
+  geom_vline(xintercept = 0, linewidth = 0.3, color = "grey40") +
+  coord_cartesian(
+    xlim = c(xmin + 0.2, xmax + 0.08),
+    clip = "off"
+  ) +
+  theme_classic(base_size = 8) +
+  labs(
+    title = "Reproducible Transitional B antigen-pres-\nentation, NF-κB, and biosynthetic pathways",
+    subtitle = "Test dataset: BMMC",
+    x = "Test NES",
+    y = NULL
   ) +
   theme(
     plot.title = element_text(face = "bold"),
@@ -758,34 +920,40 @@ p3_right_B <- ggplot(pathway_df_B, aes(x = NES, y = pathway)) +
     plot.margin = margin(5.5, 35, 5.5, 5.5)
   )
 
-p3_right_B
+p_right_TB
 
 
-tag_theme <- theme(
-  plot.tag = element_text(face = "bold"),
-  plot.tag.position = c(0.02, 0.9)
-)
 
-pA_std <- pA  + labs(tag="(a)") + tag_theme
-pB_std <- pB + labs(tag="(b)") + tag_theme
-pC_std <- pC +  labs(tag="(c)") + tag_theme
-pD_std  <- pD +  labs(tag="(d)") + tag_theme
-p_ctpnet   <- p_ctpnet   + labs(tag="(e)") + tag_theme
-p_sclinear <- p_sclinear + labs(tag="(f)") + tag_theme
-pE_std  <- pE +  labs(tag="(g)") + tag_theme
-pF_std  <- p1 +  labs(tag="(h)") + tag_theme
-pG_std  <- p2 + labs(tag="(i)") + tag_theme
+tag_theme <- theme(plot.tag = element_text(face="bold"))
+
+
+pA <- pA + labs(tag="(a)") + tag_theme
+pB <- pB + labs(tag="(b)") + tag_theme
+pC <- pC + labs(tag="(c)") + tag_theme
+p_ctpnet  <- p_ctpnet + labs(tag="(d)") + tag_theme
+p_sclinear <- p_sclinear + labs(tag="(e)") + tag_theme
+pD <- pD + labs(tag="(f)") + tag_theme
+p1 <- p1 + labs(tag="(g)") + tag_theme
+p2 <- p2 + labs(tag="(h)") + tag_theme
+p3_left <- p3_left + labs(tag="(i)") + tag_theme
+p3_right <- p3_right_mono + labs(tag="(j)") + tag_theme
+p3_left_B <- p3_left_B + labs(tag="(k)") + tag_theme
+p_right_TB <- p_right_TB + labs(tag="(l)") + tag_theme
+p4 <- p4 + labs(tag="(m)") + tag_theme
 p4 <- p4 +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + labs(tag="(j)") + tag_theme
-p3_left <- p3_left +  labs(tag="(k)") + tag_theme
-p3_right_B <- p3_right_B +  labs(tag="(l)") + tag_theme
-
+  facet_wrap(~split, nrow = 1, scales = "free_x") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+    legend.position = "bottom"
+  )
 
 fig <- 
-  (pA_std | pB_std | pC_std |pD_std) /
-  ( p_ctpnet | p_sclinear |pE_std|pF_std ) /
-  (pG_std  | p4| p3_left | p3_right_B) + 
-  plot_layout(heights = c(1, 1, 1)) &
+  
+  (pA | pB | pC | p_ctpnet)/
+  (p_sclinear|pD |p1 | p2) /
+  (p3_left |p3_right | p3_left_B|p_right_TB) /
+  p4 + 
+  plot_layout(heights = c(1.2, 1.2, 1.2, 1.2)) &
   theme(
     plot.title = element_text(face = "bold"),
     plot.tag = element_text(face = "bold"),
@@ -794,10 +962,10 @@ fig <-
 
 fig
 
-ggsave(file.path(out_dir, "Figure_1.pdf"),
+ggsave(file.path(out_dir, "Figure_1_extended.pdf"),
        plot = fig,
        device = cairo_pdf,
-       width = 12.6, height = 8.5, units = "in")
+       width = 13.2, height = 11, units = "in")
 
 
 

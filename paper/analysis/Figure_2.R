@@ -20,9 +20,9 @@ fig_dir <- file.path(base, "paper_figures", ds)
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 
-fig2_out <- file.path(fig_dir, "fig3_examples_same.rds")
-stopifnot(file.exists(fig2_out))
-fig2 <- readRDS(fig2_out)
+fig_out <- file.path(fig_dir, "fig_examples_same.rds")   # from validation function
+stopifnot(file.exists(fig_out))
+fig2 <- readRDS(fig_out)
 
 available <- names(fig2$truth)
 print(available)
@@ -34,7 +34,7 @@ stopifnot("cell_type" %in% colnames(seu_prep@meta.data))
 celltype_vec <- setNames(as.character(seu_prep@meta.data$cell_type), colnames(seu_prep))
 
 fmle_ds_by_bench <- c(
-  "citeseq_v1_final",  # bench 1 FMLE folder
+  "citeseq_v1_final",  # bench 1 FMLE folder (edit if different)
   "citeseq_v1_final",  # bench 2 FMLE folder (edit if different)
   "citeseq_v1_final"   # bench 3 FMLE folder (edit if different)
 )
@@ -90,7 +90,9 @@ df_all <- bind_rows(
     method  = factor(method,  levels = c("scLinear","cTPnet","FMLE"))
   )
 
-# -------- PANEL A PLOT --------
+# ======================================================
+# PANEL A "Kaggle PBMC", "10x PBMC 10k", "TEA-seq PBMC" 
+# ======================================================
 pA <- ggplot(df_all,
              aes(x=method, y=Pearson, color=method)) +
   
@@ -113,8 +115,9 @@ pA <- ggplot(df_all,
   )
 
 
-
-# Panel B — FMLE vs scLinear per protien
+# ==========================================================
+# Panel B — FMLE vs scLinear and FMLE vs cTPnet per protien
+# ==========================================================
 
 scl_ct <- readr::read_csv(file.path(scl, "scLinear_within_celltype_pearson.csv")) %>%
   dplyr::rename(Pearson_scl = Pearson)
@@ -141,7 +144,7 @@ lim <- range(
   finite = TRUE
 )
 padx <- 0.1 * diff(lim)
-pady <- 0.1 * diff(lim)   # more vertical space
+pady <- 0.1 * diff(lim)   
 
 xlim2 <- lim + c(-padx, padx)
 ylim2 <- lim + c(-pady, pady)
@@ -161,8 +164,35 @@ p_fmle_ctp <- ggplot(cmp_fmle_ctpnet, aes(Pearson_ctp, Pearson_fmle, color=prote
   theme_light(base_size=15) +
   labs(x="cTPnet", y="FMLE", color="Protein", shape="Cell type")
 
+# ==========================================================
+# panel C
+# ==========================================================
 
-# panel C D and E
+wins <- df_all %>%
+  filter(is.finite(Pearson)) %>%
+  group_by(dataset, protein) %>%
+  mutate(best = max(Pearson, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(is_win = (Pearson == best)) %>%
+  group_by(dataset, method) %>%
+  summarise(
+    n_prot = n_distinct(protein),
+    win_pct = mean(is_win) * 100,
+    .groups = "drop"
+  )
+
+p_win <- ggplot(wins, aes(x = method, y = win_pct, fill = method)) +
+  geom_col(width = 0.75) +
+  facet_wrap(~ dataset, nrow = 1) +
+  labs(x = NULL, y = "Win % (best per protein)") +
+  theme_classic(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+
+
+# ==========================================================
+# panel D E and F
+# ==========================================================
 
 plot_panelD_method <- function(prot,
                                method = c("FMLE","scLinear","cTPnet"),
@@ -257,40 +287,6 @@ p_CD127 <- (p1 / p2 / p3)
 
 rm(p1, p2,p3)
 
-# final <- (pA | (p_fmle_scl / p_fmle_ctp) | p_CD14 | p_CD127 | p_CD197) +
-#   plot_layout(guides = "collect") &
-#   theme(
-#     legend.position = "right",
-#     legend.box = "vertical",
-#     legend.key.size = unit(0.5, "lines"),
-#     legend.text = element_text(size = 8)
-#   )
-# 
-# final
-
-# Win percentage across 3 datasets
-
-wins <- df_all %>%
-  filter(is.finite(Pearson)) %>%
-  group_by(dataset, protein) %>%
-  mutate(best = max(Pearson, na.rm=TRUE)) %>%
-  ungroup() %>%
-  mutate(is_win = (Pearson == best)) %>%
-  group_by(dataset, method) %>%
-  summarise(
-    n_prot = n_distinct(protein),
-    win_pct = mean(is_win) * 100,
-    .groups = "drop"
-  )
-
-p_win <- ggplot(wins, aes(x = method, y = win_pct, fill = method)) +
-  geom_col(width = 0.75) +
-  facet_wrap(~ dataset, nrow = 1) +
-  labs(x = NULL, y = "Win % (best per protein)") +
-  theme_classic(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "none")
-
 
 p_win0 <- p_win + theme(legend.position = "none") + guides(fill = "none", color = "none")
 p_fmle_scl <- p_fmle_scl +
@@ -348,7 +344,7 @@ final <- ( pA
 
 final
 
-ggsave(file.path(out_dir, "Fig2_FMLE_main.pdf"),
+ggsave(file.path(out_dir, "Figure_2.pdf"),
        plot = final,
        device = cairo_pdf,
        width = 21, height = 10, units = "in",

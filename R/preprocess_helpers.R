@@ -1,17 +1,6 @@
-suppressPackageStartupMessages({
-  library(Seurat)
-  library(SeuratObject)
-  library(dplyr)
-  library(ggplot2)
-  library(scDblFinder)
-  library(scater)
-  library(DropletUtils)
-  library(intrinsicDimension)
-  library(pals)
-  library(SingleCellExperiment)
-})
-
-remove_doublets <- function(object = object, samples = NULL, remove_cells = TRUE,
+#' @keywords internal
+#' @importFrom magrittr %>%
+.remove_doublets_fmle <- function(object, samples = NULL, remove_cells = TRUE,
                             seed = 42, print_plots = TRUE, verbose = FALSE, ...) {
   set.seed(seed = seed)
   
@@ -74,7 +63,7 @@ remove_doublets <- function(object = object, samples = NULL, remove_cells = TRUE
   return(list(object = object, plots = p))
 }
 
-mad_filtering <- function(object = objec, samples = NULL, nmads = 3, type = "both",
+.mad_filtering_fmle <- function(object, samples = NULL, nmads = 3, type = "both",
                           mttype = "higher", remove_cells = TRUE, print_plots = TRUE,
                           seed = 42, min.features = NULL, verbose = FALSE, ...) {
   set.seed(seed)
@@ -152,11 +141,8 @@ mad_filtering <- function(object = objec, samples = NULL, nmads = 3, type = "bot
   return(list(object = object, plots = p))
 }
 
-integrate_samples <- function(object, samples = NULL, seed = 42, verbose = FALSE) {
-  object
-}
 
-cluster_data <- function(object, resolution = 0.8, npcs_calculate = 100, npcs = NULL,
+.cluster_data_fmle <- function(object, resolution = 0.8, npcs_calculate = 100, npcs = NULL,
                          seed = 42, verbose = FALSE) {
   set.seed(seed)
   default_assay <- Seurat::DefaultAssay(object)
@@ -194,62 +180,7 @@ cluster_data <- function(object, resolution = 0.8, npcs_calculate = 100, npcs = 
   return(object)
 }
 
-integrate_samples <- function(object, method = "rpca", samples = "samples", seed = 42,
-                              npcs = 100, k.weight = 100, verbose = FALSE) {
-  set.seed(42)
-  
-  if (typeof(object) == "list") {
-    object_list <- object
-  } else {
-    object_list <- Seurat::SplitObject(object, split.by = samples)
-  }
-  
-  object_list <- lapply(object_list, function(ob) {
-    ob <- ob %>%
-      Seurat::NormalizeData(verbose = verbose) %>%
-      Seurat::FindVariableFeatures(verbose = verbose)
-    ob
-  })
-  
-  features <- Seurat::SelectIntegrationFeatures(object.list = object_list, verbose = verbose)
-  
-  object_list <- lapply(object_list, function(ob) {
-    ob <- ob %>%
-      Seurat::ScaleData(verbose = verbose, features = features) %>%
-      Seurat::RunPCA(verbose = verbose, npcs = npcs, features = features)
-    ob
-  })
-  
-  integration.anchors <- Seurat::FindIntegrationAnchors(
-    object.list = object_list,
-    anchor.features = features,
-    reduction = "rpca",
-    verbose = verbose
-  )
-  
-  object_integrated <- Seurat::IntegrateData(
-    anchorset = integration.anchors,
-    k.weight = k.weight,
-    verbose = verbose
-  )
-  
-  Seurat::DefaultAssay(object_integrated) <- "integrated"
-  Seurat::DefaultAssay(object_integrated) <- "RNA"
-  
-  if (utils::packageVersion("SeuratObject") >= "5.0.0") {
-    object_integrated <- object_integrated %>% SeuratObject::JoinLayers()
-  }
-  
-  object_integrated <- object_integrated %>%
-    Seurat::NormalizeData(verbose = verbose) %>%
-    Seurat::FindVariableFeatures(verbose = verbose) %>%
-    Seurat::ScaleData(verbose = verbose)
-  
-  Seurat::DefaultAssay(object_integrated) <- "integrated"
-  return(object_integrated)
-}
-
-empty_drops <- function(object, lower = 100, FDR = 0.01, samples = NULL, seed = 42, ...) {
+.empty_drops_fmle <- function(object, lower = 100, FDR = 0.01, samples = NULL, seed = 42, ...) {
   set.seed(seed)
   
   if (is.null(samples)) {

@@ -8,8 +8,8 @@ They are not required to install or use the `FMLE` package.
 
 ## Layout
 
-- `analysis/`: figure and validation scripts used in the manuscript.
-- `scripts/`: dataset-specific preparation and benchmark scripts.
+- `analysis/`: figure scripts used in the manuscript.
+- `scripts/`: dataset-specific preparation, validation and benchmark scripts.
 
 ## Reproducibility
 

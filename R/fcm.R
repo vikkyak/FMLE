@@ -14,7 +14,7 @@ fcm_fit <- function(Z, R, m = 1.8, max_iter = 200, tol = 1e-5, seed = 1, verbose
   stopifnot(m > 1, R >= 2)
   set.seed(seed)
   Z <- as.matrix(Z)
-  N <- nrow(Z); eps <- 1e-12; pow <- -2 / (m - 1)
+  N <- nrow(Z); eps <- 1e-12; pow <- -1 / (m - 1)
   
   km <- stats::kmeans(Z, centers = R, nstart = 5, iter.max = 50)
   C <- km$centers

@@ -114,89 +114,47 @@ fmle_cv_parallel <- function(
   RM_grid <- expand.grid(R = R_grid, m = m_grid, KEEP.OUT.ATTRS = FALSE)
   n_RM    <- nrow(RM_grid)
   fcm_cache <- vector("list", n_RM)
+  
+  if (verbose) message("Precomputing FCM (gates) per (R, m) and fold ...")
+  
   for (k in seq_len(n_RM)) {
-    fcm_cache[[k]] <- vector("list", length(val_idx_list))
-  }
-  
-  if (verbose) {
-    message("Precomputing FCM (gates) per (R, m) and fold ...")
-  }
-  
-  # Precompute fold indices once
-  fold_pairs <- lapply(seq_along(val_idx_list), function(f) {
-    va <- val_idx_list[[f]]
-    tr <- base::setdiff(seq_len(N), va)
-    list(tr = tr, va = va)
-  })
-  
-  # One task per (R,m,fold)
-  cache_tasks <- expand.grid(
-    k = seq_len(n_RM),
-    f = seq_along(val_idx_list),
-    KEEP.OUT.ATTRS = FALSE
-  )
-  
-  build_cache_one <- function(ii) {
-    k <- cache_tasks$k[ii]
-    f <- cache_tasks$f[ii]
-    
     Rv <- RM_grid$R[k]
     mv <- RM_grid$m[k]
     
-    tr <- fold_pairs[[f]]$tr
+    fcm_cache[[k]] <- vector("list", length(val_idx_list))
     
-    Xtr <- X[tr, , drop = FALSE]
-    Ztr <- Z[tr, , drop = FALSE]
-    
-    tf <- cap_and_scale_fit(y_raw[tr], q = q)
-    
-    if (standardize) {
-      sx <- .scaler_fit(Xtr)
-      sz <- .scaler_fit(Ztr)
-      Zs <- .scaler_apply(Ztr, sz)
-    } else {
-      sx <- NULL
-      sz <- NULL
-      Zs <- Ztr
-    }
-    
-    fc <- fcm_fit(
-      Zs,
-      R = Rv,
-      m = mv,
-      max_iter = 200,
-      tol = 1e-05,
-      seed = seed,
-      verbose = FALSE
-    )
-    
-    list(
-      k = k,
-      f = f,
-      value = list(
-        centers = fc$centers,
-        sx = sx,
-        sz = sz,
+    for (f in seq_along(val_idx_list)) {
+      va <- val_idx_list[[f]]
+      tr <- base::setdiff(seq_len(N), va)
+      
+      Xtr <- X[tr, , drop = FALSE]
+      Ztr <- Z[tr, , drop = FALSE]
+      tf  <- cap_and_scale_fit(y_raw[tr], q = q)
+      ytr <- cap_and_scale_apply(y_raw[tr], tf)
+      
+      if (standardize) {
+        sx <- .scaler_fit(Xtr)
+        sz <- .scaler_fit(Ztr)
+        Zs <- .scaler_apply(Ztr, sz)
+      } else {
+        sx <- NULL
+        sz <- NULL
+        Zs <- Ztr
+      }
+      
+      # gates only
+      fc <- fcm_fit(Zs, R = Rv, m = mv, max_iter = 200, tol = 1e-5, seed = seed, verbose = FALSE)
+      
+      fcm_cache[[k]][[f]] <- list(
+        centers     = fc$centers,
+        sx          = sx,
+        sz          = sz,
         standardize = standardize,
-        m = mv,
-        R = Rv,
-        tf_y = tf
+        m           = mv,
+        R           = Rv,
+        tf_y        = tf
       )
-    )
-  }
-  
-  if (exec == "sequential") {
-    cache_res <- lapply(seq_len(nrow(cache_tasks)), build_cache_one)
-  } else {
-    cache_res <- future.apply::future_lapply(
-      seq_len(nrow(cache_tasks)),
-      build_cache_one,
-      future.seed = TRUE
-    )
-  }
-  
-  for (item in cache_res) {
-    fcm_cache[[item$k]][[item$f]] <- item$value
+    }
   }
   
   # --- full grid over (R, m, lambda) for evaluation ---
@@ -225,12 +183,16 @@ fmle_cv_parallel <- function(
     mses <- numeric(length(val_idx_list))
     
     for (f in seq_along(val_idx_list)) {
-      tr <- fold_pairs[[f]]$tr
-      va <- fold_pairs[[f]]$va
+      va <- val_idx_list[[f]]
+      tr <- base::setdiff(seq_len(N), va)
+      
       Xtr <- X[tr, , drop = FALSE]
       Ztr <- Z[tr, , drop = FALSE]
+      # ytr <- y[tr]
+      
       Xva <- X[va, , drop = FALSE]
       Zva <- Z[va, , drop = FALSE]
+      # yva <- y[va]
       
       cache_f <- fcm_cache[[k]][[f]]
       

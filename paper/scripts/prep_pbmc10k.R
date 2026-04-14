@@ -6,27 +6,27 @@
 
 
 suppressPackageStartupMessages({
+  library(data.table)
   library(Matrix)
   library(Seurat)
+  library(clusterProfiler)
+  library(IRanges)
+  library(purrr)
   library(dplyr)
-  library(reticulate)
-  use_condaenv("sclinear", required = TRUE)
-  py_config() 
-  library(scLinear)
+  library(tidyr)
+  library(readr)
+  library(FMLE)
 })
 
 
-files <- c("_config.R", "preprocess_helpers_fmle.R", "preprocess_fmle.R")
-paths <- file.path(here::here(), "paper", "scripts", files)
-stopifnot(all(file.exists(paths)))
-invisible(lapply(paths, source))
+source(file.path(here::here(), "paper", "scripts", "_config.R"))
 
 out_base <- file.path(cfg$out_root, "citeseq_v1")
 out_ctp  <- file.path(cfg$out_root, "ctp")
 dir.create(out_base, recursive=TRUE, showWarnings=FALSE)
 dir.create(out_ctp,  recursive=TRUE, showWarnings=FALSE)
 
-data_dir <- file.path(cfg$out_root, "filtered_feature_bc_matrix/")
+data_dir <- file.path(cfg$data_root, "filtered_feature_bc_matrix/")
 raw <- Read10X(data.dir = data_dir)
 names(raw)
 
@@ -91,15 +91,15 @@ seu <- subset(seu, cells = keep_cells)
 stopifnot(identical(colnames(seu[["RNA"]]), colnames(seu[["ADT"]])))
 
 # ============================================================
-# 3) preprocess_fmle (this FINALIZES the cell set)
+# 3) preprocess
 # ============================================================
-seu_final <- preprocess_fmle(
+seu_final <- preprocess(
   object = seu,
   remove_doublets = TRUE,
   low_qc_cell_removal = TRUE,
-  integrate_data = FALSE,
   remove_empty_droplets = FALSE,
   resolution = 0.8,
+  do_clustering = FALSE,
   seed = 42,
   return_plots = FALSE,
   print_plots = FALSE,
@@ -125,16 +125,16 @@ seu_final <- FindVariableFeatures(seu_final, assay="RNA", selection.method="vst"
 hvg <- VariableFeatures(seu_final)
 
 # ============================================================
-# Cross trasfer common genes from all three datasets are gene_panel_2000.rds
-bench <- 2
-base <- path.expand(sprintf("~/cfg$data_root/FMLE/benchmarks_%d", bench))
-scl    <- file.path(base, "sclinear") 
-ds      <- "citeseq_v1"
-seu_final <- readRDS(file.path(base, ds, "seu_final.rds"))  
-hvg <- readRDS("~/cfg$data_root/FMLE/transfer_preds/gene_panel_2000.rds")
-stopifnot(all(hvg %in% rownames(GetAssayData(seu_final, assay="RNA", layer="data"))))
-stopifnot(anyDuplicated(hvg) == 0)
-seu_final <- NormalizeData(seu_final, assay="RNA", normalization.method="LogNormalize", scale.factor=1e4)
+# # Cross trasfer common genes from all three datasets are gene_panel_2000.rds
+# bench <- 2
+# base <- path.expand(sprintf("~/cfg$data_root/FMLE/benchmarks_%d", bench))
+# scl    <- file.path(base, "sclinear") 
+# ds      <- "citeseq_v1"
+# seu_final <- readRDS(file.path(base, ds, "seu_final.rds"))  
+# hvg <- readRDS("~/cfg$data_root/FMLE/transfer_preds/gene_panel_2000.rds")
+# stopifnot(all(hvg %in% rownames(GetAssayData(seu_final, assay="RNA", layer="data"))))
+# stopifnot(anyDuplicated(hvg) == 0)
+# seu_final <- NormalizeData(seu_final, assay="RNA", normalization.method="LogNormalize", scale.factor=1e4)
 # ============================================================
 
 
@@ -205,8 +205,6 @@ cat("DONE\n",
     "Saved cTPnet CSV:", out_ctp, "\n", sep="")
 
 
-writeLines(capture.output(sessionInfo()),
-           file.path(cfg$out_root, "sessionInfo.txt"))
-saveRDS(cfg, file.path(cfg$out_root, "config_used.rds"))
+
 
 
