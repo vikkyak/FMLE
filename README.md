@@ -4,8 +4,7 @@
 
 The package supports:
 
-- single-task prediction (`fmle_train()`, `fmle_predict()`)
-- multi-task prediction (`fmle_train_mt()`, `fmle_predict_mt()`)
+- task prediction (`fmle_train()`, `fmle_predict()`)
 - cross-validation over the number of experts, fuzzifier, and L1 penalty (`fmle_cv_parallel()`, `fmle_cv_mt_parallel()`)
 - fuzzy c-means gating (`fcm_fit()`)
 - predictive uncertainty decomposition from the fitted experts
