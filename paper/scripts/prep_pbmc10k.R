@@ -139,7 +139,6 @@ hvg <- VariableFeatures(seu_final)
 
 
 seu_final <- ScaleData(seu_final, assay="RNA", features=hvg, verbose=FALSE)
-ElbowPlot(seu_final, ndims = 50)
 seu_final <- RunPCA(seu_final, assay="RNA", features=hvg, npcs=cfg$pca_npcs, verbose=FALSE)
 
 Zfull <- Embeddings(seu_final, "pca")
