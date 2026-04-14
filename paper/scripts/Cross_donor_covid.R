@@ -555,7 +555,6 @@ hvg <- VariableFeatures(seu_covid)
 seu_covid <- ScaleData(seu_covid, assay="RNA", features=hvg, verbose=FALSE)
 
 seu_covid <- RunPCA(seu_covid, assay="RNA", features=hvg, npcs=20, verbose=FALSE)
-ElbowPlot(seu_covid, ndims = 30)
 Zfull <- Embeddings(seu_covid, "pca")
 Z <- Zfull[, seq_len(min(20, ncol(Zfull))), drop=FALSE]
 X <- t(as.matrix(GetAssayData(seu_covid, assay="RNA", layer="data")[hvg, , drop=FALSE]))
