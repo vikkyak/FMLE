@@ -162,7 +162,6 @@ seu <- FindVariableFeatures(seu, assay="RNA", selection.method="vst", nfeatures=
 hvg <- VariableFeatures(seu)
 
 seu <- ScaleData(seu, assay="RNA", features=hvg, verbose=FALSE)
-ElbowPlot(seu, ndims = 30)
 seu <- RunPCA(seu, assay="RNA", features=hvg, npcs=20, verbose=FALSE)
 
 Zfull <- Embeddings(seu, "pca")
