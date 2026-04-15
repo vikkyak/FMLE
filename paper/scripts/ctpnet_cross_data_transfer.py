@@ -399,54 +399,6 @@ print("Saved:", train_out, test_out, ckpt_out)
 
 
 
-# =============================================================================
-#  python ctpnet_transfer.py \
-#   --train_dir ~/Desktop/FMLE/benchmarks_1/ctp \
-#   --test_dir  ~/Desktop/FMLE/benchmarks_3/ctp \
-#   --out_dir   ~/Desktop/FMLE/transfer_preds/ctp_A_to_C \
-#   --panel     ~/Desktop/FMLE/transfer_preds/gene_panel_2000.csv \
-#   --source_tag A --target_tag C
-# =============================================================================
-
-
-# =============================================================================
-# python ctpnet_transfer.py \
-#   --train_dir ~/Desktop/FMLE/benchmarks_2/ctp \
-#   --test_dir  ~/Desktop/FMLE/benchmarks_1/ctp \
-#   --out_dir   ~/Desktop/FMLE/transfer_preds/ctp_B_to_A \
-#   --panel     ~/Desktop/FMLE/transfer_preds/gene_panel_2000.csv \
-#   --source_tag B --target_tag A
-# =============================================================================
-
-
-# =============================================================================
-# python ctpnet_transfer.py \
-#   --train_dir ~/Desktop/FMLE/benchmarks_2/ctp \
-#   --test_dir  ~/Desktop/FMLE/benchmarks_3/ctp \
-#   --out_dir   ~/Desktop/FMLE/transfer_preds/ctp_B_to_C \
-#   --panel     ~/Desktop/FMLE/transfer_preds/gene_panel_2000.csv \
-#   --source_tag B --target_tag C
-# =============================================================================
-
-
-# =============================================================================
-# python ctpnet_transfer.py \
-#   --train_dir ~/Desktop/FMLE/benchmarks_3/ctp \
-#   --test_dir  ~/Desktop/FMLE/benchmarks_1/ctp \
-#   --out_dir   ~/Desktop/FMLE/transfer_preds/ctp_C_to_A \
-#   --panel     ~/Desktop/FMLE/transfer_preds/gene_panel_2000.csv \
-#   --source_tag C --target_tag A
-# =============================================================================
-
-# =============================================================================
-# python ctpnet_transfer.py \
-#   --train_dir ~/Desktop/FMLE/benchmarks_3/ctp \
-#   --test_dir  ~/Desktop/FMLE/benchmarks_2/ctp \
-#   --out_dir   ~/Desktop/FMLE/transfer_preds/ctp_C_to_B \
-#   --panel     ~/Desktop/FMLE/transfer_preds/gene_panel_2000.csv \
-#   --source_tag C --target_tag B
-# =============================================================================
-
 
 
 
