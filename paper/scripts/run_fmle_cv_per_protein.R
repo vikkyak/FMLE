@@ -1,23 +1,23 @@
 
 suppressPackageStartupMessages({
-  library(data.table)   # fread
-  library(Matrix)       # sparse matrices
-  library(Seurat)       # Seurat v5 objects + PCA/UMAP
-  library(FMLE)         # fmle_train / fmle_cv_parallel / helpers
+  library(data.table)  
+  library(Matrix)       
+  library(Seurat)       
+  library(FMLE)         
   library(dplyr)
   library(tidyr)
   library(purrr)
-  library(readr)        # write_csv
+  library(readr)        
   library(tibble)
-  library(ggplot2)      # plots (ElbowPlot etc. is Seurat, but ggplot2 ok)
-  library(glue)         # glue("final_{prot}.rds")
-  library(glmnet)       # if FMLE uses it internally or you call it directly
+  library(ggplot2)      
+  library(glue)        
+  library(glmnet)      
   library(future)
   library(future.apply)
 })
 
 
-bench <- 1  # set 1 or 2 or 3
+bench <- 1  # set 1, 2, or 3
 ds    <- "citeseq_v1"
 # base  <- file.path(cfg$out_root, sprintf("benchmarks_c_doror_%d", bench))
 # base  <- file.path(cfg$out_root, sprintf("benchmarks_%d", bench))
@@ -48,7 +48,7 @@ stopifnot(identical(rownames(X), rownames(Z)))
 stopifnot(all(train_cells %in% colnames(adt_mat)))
 stopifnot(all(test_cells  %in% colnames(adt_mat)))
 
-## if group is present heer in case of kaggle uncommentt the group
+## if group is present here in case of kaggle, uncomment the group
 
 if (bench == 1) {
   stopifnot(exists("groups"))
@@ -60,14 +60,14 @@ if (bench == 1) {
 out_dir <- file.path(base, "FMLE", paste0(ds, "_cv"))
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
-plan(multicore, workers = 16)   # 12–14 is good on your 16-core (no SMT) system
+plan(multicore, workers = 12)   
 Sys.setenv(OMP_NUM_THREADS="1", MKL_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1")
-options(future.globals.maxSize = 16 * 1024^3)  # bump if X/Z are big
+options(future.globals.maxSize = 16 * 1024^3)  
 set.seed(1)
-
-R_grid      <- c(2, 3, 4, 5, 6)
-m_grid      <- c(1.5, 1.6, 1.7, 1.8)
-lambda_grid <- c(0, 1e-3, 1e-2, 3e-2, 5e-2)
+# Can we edited as per analysis
+R_grid      <- c(2, 3, 4, 5)  
+m_grid      <- c(1.5, 1.6, 1.7, 1.8, 2.0)
+lambda_grid <- c(0, 1e-3, 1e-2, 3e-2)
 X_cv  <- X[train_cells, , drop = FALSE]
 Z_cv  <- Z[train_cells, , drop = FALSE]
 
