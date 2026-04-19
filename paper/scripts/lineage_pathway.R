@@ -45,7 +45,7 @@ run_lineage_de <- function(
   
   # auto-adjust cutoff
   min_cells_use <- min(min_cells, min(tab))
-  min_cells_use <- max(10, min_cells_use)
+  min_cells_use <- max(50, min_cells_use)
   
   keep_reg <- names(tab)[tab >= min_cells_use]
   
